@@ -85,16 +85,23 @@ def setup_authentication():
 def test_business_endpoints(headers):
     """Test business management endpoints"""
     print_section("BUSINESS MANAGEMENT")
-    
-    # Get business info (should create default if not exists)
-    make_request("GET", "/api/business/", headers=headers)
-    
-    # Update business info
+
+    # Clean up any existing business record
+    make_request("DELETE", "/api/business/", headers=headers)
+
+    # Create business info
     business_data = {
         "name": "Signance Digital Solutions"
     }
-    make_request("PUT", "/api/business/", headers=headers, data=business_data)
-    
+    make_request("POST", "/api/business/", headers=headers, data=business_data)
+
+    # Retrieve created business
+    make_request("GET", "/api/business/", headers=headers)
+
+    # Update business info
+    update_data = {"name": "Signance Digital Solutions Updated"}
+    make_request("PUT", "/api/business/", headers=headers, data=update_data)
+
     # Get updated business info
     make_request("GET", "/api/business/", headers=headers)
 

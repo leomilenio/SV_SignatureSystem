@@ -35,6 +35,10 @@
    - ✅ Documentación automática en /docs
    - ✅ CORS configurado para desarrollo
 
+6. **Gestión de Negocios**
+   - ✅ CRUD de negocios disponible
+   - ✅ Endpoints `/api/business/` y `/api/business/logo`
+
 ## 🔧 Estructura del Proyecto
 
 ```
@@ -140,26 +144,22 @@ python test_comprehensive.py
 
 ## 📝 Próximos Pasos
 
-1. **Gestión de Negocios**
-   - Implementar CRUD para businesses
-   - Endpoints para crear/editar/eliminar negocios
-
-2. **Gestión de Media**
+1. **Gestión de Media**
    - Upload de archivos
    - Procesamiento de imágenes/videos
    - Almacenamiento y organización
 
-3. **Sistema de Programación**
+2. **Sistema de Programación**
    - Crear/editar/eliminar schedules
    - Sistema de reproducción automática
    - Calendario de contenido
 
-4. **Frontend**
+3. **Frontend**
    - Interfaz de usuario para gestión
    - Dashboard de administración
    - Vista previa de contenido
 
-5. **Mejoras de Seguridad**
+4. **Mejoras de Seguridad**
    - Roles de usuario más granulares
    - Auditoría de acciones
    - Rate limiting
