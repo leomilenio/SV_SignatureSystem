@@ -25,6 +25,24 @@ def get_business_info(
     return business
 
 
+@router.post("/", response_model=BusinessRead, status_code=status.HTTP_201_CREATED)
+async def create_business_info(
+    name: str = Form(...),
+    logo: Optional[UploadFile] = File(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Create business information"""
+    if business_crud.get_business(db):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Business already exists")
+
+    logo_bytes = logo.file.read() if logo else None
+
+    business_create = BusinessCreate(name=name, logo=logo_bytes)
+    business = business_crud.create_business(db, business_create)
+    return business
+
+
 @router.put("/", response_model=BusinessRead)
 def update_business_info(
     name: Optional[str] = Form(None),
@@ -79,3 +97,15 @@ def get_business_logo(
     # Convert bytes to base64 for frontend consumption
     logo_b64 = base64.b64encode(business.logo).decode('utf-8')
     return {"logo": logo_b64}
+
+
+@router.delete("/", status_code=status.HTTP_204_NO_CONTENT)
+def delete_business(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Delete business record"""
+    success = business_crud.delete_business(db, business_id=1)
+    if not success:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Business not found")
+    return None
