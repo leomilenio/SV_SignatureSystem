@@ -4,7 +4,7 @@
       <q-card-section class="text-center">
         <div class="login-header">
           <q-icon name="video_library" size="3rem" color="primary" />
-          <h4 class="q-my-md">Signance System</h4>
+          <h4 class="q-my-md">Pochtecayotl Signance System</h4>
           <p class="text-grey-6">Sistema de Gestión de Contenido Digital</p>
         </div>
       </q-card-section>
@@ -262,7 +262,7 @@ export default {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #000000 0%, #784F17 10%, #E70000 25%, #FF8C00 40%, #FFEF00 55%, #00811F 70%, #00A7E4 85%, #760089 100%);
   padding: 20px;
 }
 

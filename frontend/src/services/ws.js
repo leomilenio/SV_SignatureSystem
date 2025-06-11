@@ -138,7 +138,7 @@ class WebSocketService {
     }
   }
 
-  // Métodos específicos para Signance System
+  // Métodos específicos para Pochtecayotl Signance System
   
   // Notificar inicio de upload de archivo
   notifyUploadStart(fileData) {
