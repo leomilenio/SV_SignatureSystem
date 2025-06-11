@@ -4,12 +4,15 @@ Media router for file upload and management
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from typing import List
+import os
+from pathlib import Path
 
 from app.db import get_db
 from app.db.crud import media_crud
 from app.db.schemas.media_schema import MediaCreate, MediaRead, MediaUpdate, MediaType
 from app.api.routers.auth import get_current_user
 from app.db.models.user import User
+from app.utils import ffmpeg
 
 router = APIRouter()
 
@@ -17,21 +20,51 @@ router = APIRouter()
 @router.post("/", response_model=MediaRead)
 async def create_media(
     filename: str = Form(...),
-    media_type: MediaType = Form(...), 
-    duration: int = Form(...),
+    media_type: MediaType = Form(...),
+    duration: int = Form(...),  # Este valor será sobrescrito por la metadata real
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Upload new media file"""
-    media_data = MediaCreate(
-        filename=filename,
-        media_type=media_type,
-        duration=duration
-    )
-    
+    """Upload new media file (image or video). Obtiene metadata real y genera thumbnail si es video."""
     try:
-        return media_crud.create_media(db=db, media_in=media_data, file=file)
+        # 1. Guardar archivo subido
+        saved_filepath = media_crud.save_upload_file(file)
+        saved_path = Path(saved_filepath)
+
+        # 2. Obtener metadata real
+        real_duration = duration
+        extra_metadata = {}
+        if media_type == MediaType.video:
+            info = ffmpeg.get_media_info(saved_path)
+            real_duration = int(info.get('duration', duration))
+            extra_metadata = {
+                'format': info.get('format'),
+                'size': info.get('size'),
+                'streams': info.get('streams')
+            }
+            # 3. Generar thumbnail para video
+            thumb_path = saved_path.parent / f"{saved_path.stem}_thumb.jpg"
+            ffmpeg.generate_thumbnail(saved_path, thumb_path, time_offset=1.0)
+        else:
+            # Si es imagen, solo obtener tamaño de archivo
+            extra_metadata = {'size': saved_path.stat().st_size}
+
+        # 4. Crear registro en base de datos con metadata real
+        media_data = MediaCreate(
+            filename=filename,
+            media_type=media_type,
+            duration=real_duration
+        )
+        db_media = media_crud.create_media(db=db, media_in=media_data, file=None, filepath_override=saved_filepath)
+
+        # 5. (Opcional) Guardar metadata extra en un campo adicional si lo deseas
+        # Por ahora solo se retorna en la respuesta
+        response = db_media.__dict__.copy()
+        response.update(extra_metadata)
+        if media_type == MediaType.video:
+            response['thumbnail'] = str(thumb_path)
+        return response
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

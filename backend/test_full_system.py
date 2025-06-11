@@ -8,7 +8,7 @@ import io
 import os
 from typing import Dict, Any
 
-BASE_URL = "http://127.0.0.1:8000"
+BASE_URL = "http://127.0.0.1:8002"
 
 def print_section(title: str):
     print(f"\n{'='*50}")

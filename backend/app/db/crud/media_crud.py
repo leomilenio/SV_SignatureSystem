@@ -32,10 +32,12 @@ def save_upload_file(file: UploadFile) -> str:
     return filepath
 
 
-def create_media(db: Session, media_in: MediaCreate, file: UploadFile) -> Media:
-    """Create new media record"""
-    filepath = save_upload_file(file)
-    
+def create_media(db: Session, media_in: MediaCreate, file: UploadFile = None, filepath_override: str = None) -> Media:
+    """Create new media record. Si se pasa filepath_override, no guarda el archivo de nuevo."""
+    if filepath_override:
+        filepath = filepath_override
+    else:
+        filepath = save_upload_file(file)
     db_media = Media(
         filename=media_in.filename,
         filepath=filepath,
