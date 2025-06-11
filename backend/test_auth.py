@@ -1,6 +1,12 @@
+"""Manual test script for authentication endpoints.
+
+This module relies on the ``requests`` library and is intended to be
+executed manually. If ``requests`` is not available, ``pytest`` will skip
+this module during collection.
 """
-Test script for authentication endpoints
-"""
+import pytest
+
+pytest.importorskip("requests")
 import requests
 import json
 

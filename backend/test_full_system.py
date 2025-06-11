@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
+"""Manual test script covering all Signance System modules.
+
+This script depends on the ``requests`` package and is designed for
+manual execution. ``pytest`` will skip it automatically when the
+dependency is missing.
 """
-Comprehensive test script for all Signance System modules
-"""
+import pytest
+
+pytest.importorskip("requests")
 import requests
 import json
 import io
