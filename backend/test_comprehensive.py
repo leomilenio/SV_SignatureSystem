@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
+"""Manual comprehensive test script for the API.
+
+Requires the ``requests`` package and is intended for manual execution.
+If ``requests`` is missing, the module will be skipped by ``pytest``.
 """
-Comprehensive test script for Signance System API
-"""
+import pytest
+
+pytest.importorskip("requests")
 import requests
 import json
 import time
