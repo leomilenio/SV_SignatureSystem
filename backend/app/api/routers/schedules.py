@@ -1,7 +1,7 @@
 """
 Schedule router for content scheduling
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List
 
@@ -10,6 +10,7 @@ from app.db.crud import schedule_crud
 from app.db.schemas.schedule_schema import ScheduleCreate, ScheduleRead, ScheduleUpdate
 from app.api.routers.auth import get_current_user
 from app.db.models.user import User
+from app.core.websocket_manager import broadcast_event
 
 router = APIRouter()
 
@@ -18,10 +19,13 @@ router = APIRouter()
 def create_schedule(
     schedule: ScheduleCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    background_tasks: BackgroundTasks = BackgroundTasks()
 ):
     """Create new schedule"""
-    return schedule_crud.create_schedule(db=db, schedule_in=schedule)
+    new_schedule = schedule_crud.create_schedule(db=db, schedule_in=schedule)
+    background_tasks.add_task(broadcast_event, "schedule_created", {"id": new_schedule.id})
+    return new_schedule
 
 
 @router.get("/", response_model=List[ScheduleRead])
@@ -66,7 +70,8 @@ def update_schedule(
     schedule_id: int,
     schedule_update: ScheduleUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    background_tasks: BackgroundTasks = BackgroundTasks()
 ):
     """Update schedule"""
     schedule = schedule_crud.update_schedule(
@@ -77,6 +82,7 @@ def update_schedule(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Schedule not found"
         )
+    background_tasks.add_task(broadcast_event, "schedule_updated", {"id": schedule.id})
     return schedule
 
 
@@ -84,7 +90,8 @@ def update_schedule(
 def delete_schedule(
     schedule_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    background_tasks: BackgroundTasks = BackgroundTasks()
 ):
     """Delete schedule"""
     success = schedule_crud.delete_schedule(db, schedule_id=schedule_id)
@@ -93,4 +100,5 @@ def delete_schedule(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Schedule not found"
         )
+    background_tasks.add_task(broadcast_event, "schedule_deleted", {"id": schedule_id})
     return {"message": "Schedule deleted successfully"}

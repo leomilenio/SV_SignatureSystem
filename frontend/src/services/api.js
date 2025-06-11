@@ -131,6 +131,9 @@ export const mediaAPI = {
 export const businessAPI = {
   // Obtener información del negocio
   get: () => api.get('/business/'),
+
+  // Verificar si requiere configuración
+  checkSetup: () => api.get('/business/check-setup'),
   
   // Crear información del negocio
   create: (businessData) => {
@@ -203,3 +206,4 @@ export const handleFileError = (error, toast) => {
 }
 
 export default api
+

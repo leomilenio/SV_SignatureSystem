@@ -1,7 +1,7 @@
 """
 Media router for file upload and management
 """
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List
 import os
@@ -13,6 +13,7 @@ from app.db.schemas.media_schema import MediaCreate, MediaRead, MediaUpdate, Med
 from app.api.routers.auth import get_current_user
 from app.db.models.user import User
 from app.utils import ffmpeg
+from app.core.websocket_manager import broadcast_event
 
 router = APIRouter()
 
@@ -24,7 +25,8 @@ async def create_media(
     duration: int = Form(...),  # Este valor será sobrescrito por la metadata real
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    background_tasks: BackgroundTasks = BackgroundTasks()
 ):
     """Upload new media file (image or video). Obtiene metadata real y genera thumbnail si es video."""
     try:
@@ -57,6 +59,7 @@ async def create_media(
             duration=real_duration
         )
         db_media = media_crud.create_media(db=db, media_in=media_data, file=None, filepath_override=saved_filepath)
+        background_tasks.add_task(broadcast_event, "media_created", {"id": db_media.id})
 
         # 5. (Opcional) Guardar metadata extra en un campo adicional si lo deseas
         # Por ahora solo se retorna en la respuesta
@@ -104,7 +107,8 @@ def update_media(
     media_id: int,
     media_update: MediaUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    background_tasks: BackgroundTasks = BackgroundTasks()
 ):
     """Update media duration"""
     media = media_crud.update_media(db, media_id=media_id, media_update=media_update)
@@ -113,6 +117,7 @@ def update_media(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Media not found"
         )
+    background_tasks.add_task(broadcast_event, "media_updated", {"id": media.id})
     return media
 
 
@@ -120,7 +125,8 @@ def update_media(
 def delete_media(
     media_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    background_tasks: BackgroundTasks = BackgroundTasks()
 ):
     """Delete media file"""
     success = media_crud.delete_media(db, media_id=media_id)
@@ -129,4 +135,5 @@ def delete_media(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Media not found"
         )
+    background_tasks.add_task(broadcast_event, "media_deleted", {"id": media_id})
     return {"message": "Media deleted successfully"}

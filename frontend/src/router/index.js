@@ -2,19 +2,36 @@ import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '../views/LoginView.vue'
 import Ok_TestView from '../views/Ok_TestView.vue'
 import Error_View from '../views/Error_View.vue'
+import SelectionView from '../views/SelectionView.vue'
+import PlayerView from '../views/PlayerView.vue'
+import ConfigView from '../views/ConfigView.vue'
 
 const routes = [
   {
     path: '/',
-    redirect: '/login'
+    name: 'Selection',
+    component: SelectionView,
+    meta: {
+      requiresAuth: false,
+      title: 'Signance System'
+    }
   },
   {
     path: '/login',
     name: 'Login',
     component: LoginView,
-    meta: { 
+    meta: {
       requiresAuth: false,
       title: 'Iniciar Sesión - Signance System'
+    }
+  },
+  {
+    path: '/config',
+    name: 'Config',
+    component: ConfigView,
+    meta: {
+      requiresAuth: false,
+      title: 'Configuración - Signance System'
     }
   },
   {
@@ -30,9 +47,18 @@ const routes = [
     path: '/error',
     name: 'Error',
     component: Error_View,
-    meta: { 
+    meta: {
       requiresAuth: false,
       title: 'Error - Signance System'
+    }
+  },
+  {
+    path: '/player',
+    name: 'Player',
+    component: PlayerView,
+    meta: {
+      requiresAuth: false,
+      title: 'Reproductor - Signance System'
     }
   }
   // Futuras rutas para el sistema completo:
