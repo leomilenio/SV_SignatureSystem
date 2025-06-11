@@ -58,7 +58,7 @@ import 'vue-toastification/dist/index.css'
 
 const app = createApp(App)
 
-console.log('🎬 Signance System - Frontend iniciado')
+console.log('🎬 Pochtecayotl Signance System - Frontend iniciado')
 
 // Configure Quasar with components
 app.use(Quasar, {

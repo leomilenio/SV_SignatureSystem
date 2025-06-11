@@ -2,7 +2,7 @@
   <div class="selection-container signance-container">
     <q-card class="q-pa-xl text-center">
       <q-card-section>
-        <h5>Bienvenido a Signance System</h5>
+        <h5>Bienvenido a Pochtecayotl Signance System</h5>
         <p>Seleccione una opción para continuar</p>
       </q-card-section>
       <q-card-actions align="center" class="q-gutter-md">

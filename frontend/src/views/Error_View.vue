@@ -5,7 +5,7 @@
       <div class="error-header text-center">
         <q-icon name="error" size="5rem" color="negative" />
         <h3 class="q-my-md text-negative">¡Oops! Algo salió mal</h3>
-        <p class="q-mb-none text-grey-6">Signance System - Página de Error</p>
+        <p class="q-mb-none text-grey-6">Pochtecayotl Signance System - Página de Error</p>
       </div>
 
       <!-- Información del error -->
@@ -387,7 +387,7 @@ export default {
 <style scoped>
 .error-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #ff7b7b 0%, #ff416c 100%);
+  background: linear-gradient(135deg, #000000 0%, #784F17 10%, #E70000 25%, #FF8C00 40%, #FFEF00 55%, #00811F 70%, #00A7E4 85%, #760089 100%);
   padding: 20px 0;
 }
 

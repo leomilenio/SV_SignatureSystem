@@ -1,2 +1,2 @@
 // Placeholder bundle
-console.log('Signance frontend placeholder');
+console.log('Pochtecayotl Signance frontend placeholder');

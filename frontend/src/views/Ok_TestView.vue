@@ -5,7 +5,7 @@
       <div class="signance-header text-center">
         <q-icon name="check_circle" size="4rem" color="white" />
         <h3 class="q-my-md">¡Sistema Funcionando Correctamente!</h3>
-        <p class="q-mb-none">Signance System - Autenticación Exitosa</p>
+        <p class="q-mb-none">Pochtecayotl Signance System - Autenticación Exitosa</p>
       </div>
 
       <!-- Información del usuario -->
@@ -323,7 +323,7 @@ export default {
 <style scoped>
 .test-ok-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #000000 0%, #784F17 10%, #E70000 25%, #FF8C00 40%, #FFEF00 55%, #00811F 70%, #00A7E4 85%, #760089 100%);
   padding: 20px 0;
 }
 

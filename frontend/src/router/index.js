@@ -13,7 +13,7 @@ const routes = [
     component: SelectionView,
     meta: {
       requiresAuth: false,
-      title: 'Signance System'
+      title: 'Pochtecayotl Signance System'
     }
   },
   {
@@ -22,7 +22,7 @@ const routes = [
     component: LoginView,
     meta: {
       requiresAuth: false,
-      title: 'Iniciar Sesión - Signance System'
+      title: 'Iniciar Sesión - Pochtecayotl Signance System'
     }
   },
   {
@@ -31,7 +31,7 @@ const routes = [
     component: ConfigView,
     meta: {
       requiresAuth: false,
-      title: 'Configuración - Signance System'
+      title: 'Configuración - Pochtecayotl Signance System'
     }
   },
   {
@@ -40,7 +40,7 @@ const routes = [
     component: Ok_TestView,
     meta: { 
       requiresAuth: true,
-      title: 'Prueba Exitosa - Signance System'
+      title: 'Prueba Exitosa - Pochtecayotl Signance System'
     }
   },
   {
@@ -49,7 +49,7 @@ const routes = [
     component: Error_View,
     meta: {
       requiresAuth: false,
-      title: 'Error - Signance System'
+      title: 'Error - Pochtecayotl Signance System'
     }
   },
   {
@@ -58,7 +58,7 @@ const routes = [
     component: PlayerView,
     meta: {
       requiresAuth: false,
-      title: 'Reproductor - Signance System'
+      title: 'Reproductor - Pochtecayotl Signance System'
     }
   }
   // Futuras rutas para el sistema completo:
@@ -98,7 +98,7 @@ const router = createRouter({
 // Navigation Guards
 router.beforeEach((to, from, next) => {
   // Actualizar título de la página
-  document.title = to.meta.title || 'Signance System'
+  document.title = to.meta.title || 'Pochtecayotl Signance System'
   
   // Verificar autenticación
   const token = localStorage.getItem('signance_token')

@@ -9,7 +9,7 @@ export default {
   name: 'App',
   mounted() {
     // Configuración global de la aplicación
-    console.log('🎬 Signance System - Frontend iniciado')
+    console.log('🎬 Pochtecayotl Signance System - Frontend iniciado')
     
     // Verificar conectividad con el backend
     this.checkBackendConnection()
@@ -62,7 +62,7 @@ export default {
 }
 
 .signance-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #000000 0%, #784F17 10%, #E70000 25%, #FF8C00 40%, #FFEF00 55%, #00811F 70%, #00A7E4 85%, #760089 100%);
   color: white;
   padding: 20px;
   border-radius: 8px;

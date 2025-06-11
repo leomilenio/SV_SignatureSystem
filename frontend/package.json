@@ -1,7 +1,7 @@
 {
   "name": "signance-frontend",
   "version": "1.0.0",
-  "description": "Signance System - Frontend para gestión de contenido digital y multimedia",
+  "description": "Pochtecayotl Signance System - Frontend para gestión de contenido digital y multimedia",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
