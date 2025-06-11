@@ -3,7 +3,7 @@ FastAPI main application
 """
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFile
+from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, RedirectResponse
 from contextlib import asynccontextmanager
 import os
