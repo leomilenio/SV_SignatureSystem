@@ -3,7 +3,7 @@ FastAPI main application
 """
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
+from fastapi.staticfiles import StaticFile
 from fastapi.responses import FileResponse, RedirectResponse
 from contextlib import asynccontextmanager
 import os
@@ -72,11 +72,6 @@ async def root(db: Session = Depends(get_db)):
         return RedirectResponse(url="/login")
     if not business_crud.business_exists(db):
         return RedirectResponse(url="/config")
-    index_file = os.path.join(FRONTEND_DIST, "index.html")
-    if os.path.exists(index_file):
-        return FileResponse(index_file)
-    return {"message": "Signance System API"}
-
 
 @app.get("/health")
 async def health_check():
