@@ -24,6 +24,11 @@ def get_or_create_business(db: Session) -> Business:
     return business
 
 
+def business_exists(db: Session) -> bool:
+    """Return True if a business record exists"""
+    return db.query(Business).count() > 0
+
+
 def create_business(db: Session, business_in: BusinessCreate) -> Business:
     """Create new business record"""
     db_business = Business(**business_in.dict())
@@ -58,3 +63,4 @@ def delete_business(db: Session, business_id: int) -> bool:
     db.delete(db_business)
     db.commit()
     return True
+

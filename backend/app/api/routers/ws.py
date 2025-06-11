@@ -8,7 +8,7 @@ async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
     try:
         while True:
-            # Receive and ignore incoming messages; clients may use this as keepalive
             await websocket.receive_text()
     except WebSocketDisconnect:
         manager.disconnect(websocket)
+

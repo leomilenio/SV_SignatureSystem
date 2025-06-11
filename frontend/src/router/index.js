@@ -4,6 +4,7 @@ import Ok_TestView from '../views/Ok_TestView.vue'
 import Error_View from '../views/Error_View.vue'
 import SelectionView from '../views/SelectionView.vue'
 import PlayerView from '../views/PlayerView.vue'
+import ConfigView from '../views/ConfigView.vue'
 
 const routes = [
   {
@@ -19,9 +20,18 @@ const routes = [
     path: '/login',
     name: 'Login',
     component: LoginView,
-    meta: { 
+    meta: {
       requiresAuth: false,
       title: 'Iniciar Sesión - Signance System'
+    }
+  },
+  {
+    path: '/config',
+    name: 'Config',
+    component: ConfigView,
+    meta: {
+      requiresAuth: false,
+      title: 'Configuración - Signance System'
     }
   },
   {

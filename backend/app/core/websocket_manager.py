@@ -25,4 +25,4 @@ manager = ConnectionManager()
 
 async def broadcast_event(event: str, data: Dict[str, Any]) -> None:
     """Broadcast an event with associated data to all clients."""
-    await manager.broadcast({"event": event, "data": data})
+

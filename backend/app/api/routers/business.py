@@ -26,6 +26,13 @@ def get_business_info(
     return business
 
 
+@router.get("/check-setup")
+def check_business_setup(db: Session = Depends(get_db)):
+    """Check if business info exists"""
+    exists = business_crud.get_business(db) is not None
+    return {"setup_required": not exists}
+
+
 @router.post("/", response_model=BusinessRead, status_code=status.HTTP_201_CREATED)
 async def create_business_info(
     name: str = Form(...),
@@ -115,4 +122,4 @@ def delete_business(
     if not success:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Business not found")
     background_tasks.add_task(broadcast_event, "business_deleted", {"id": 1})
-    return None
+
