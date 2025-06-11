@@ -66,7 +66,7 @@ app.include_router(ws.router)
 
 
 @app.get("/", include_in_schema=False)
-def root(db: Session = Depends(get_db)):
+async def root(db: Session = Depends(get_db)):
     """Serve SPA entry or redirect based on setup state"""
     if count_users(db) == 0:
         return RedirectResponse(url="/login")
