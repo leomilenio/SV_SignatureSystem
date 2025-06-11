@@ -1,15 +1,18 @@
 """
 FastAPI main application
 """
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFile
+from fastapi.responses import FileResponse, RedirectResponse
 from contextlib import asynccontextmanager
 import os
 
 from app.config import settings
-from app.db import init_db
+from app.db import init_db, get_db
+from sqlalchemy.orm import Session
+from app.db.crud.user_crud import count_users
+from app.db.crud import business_crud
 from app.api.routers import auth, media, schedules, business, ws
 
 
@@ -63,12 +66,12 @@ app.include_router(ws.router)
 
 
 @app.get("/", include_in_schema=False)
-async def root():
-    index_file = os.path.join(FRONTEND_DIST, "index.html")
-    if os.path.exists(index_file):
-        return FileResponse(index_file)
-    return {"message": "Signance System API"}
-
+async def root(db: Session = Depends(get_db)):
+    """Serve SPA entry or redirect based on setup state"""
+    if count_users(db) == 0:
+        return RedirectResponse(url="/login")
+    if not business_crud.business_exists(db):
+        return RedirectResponse(url="/config")
 
 @app.get("/health")
 async def health_check():
