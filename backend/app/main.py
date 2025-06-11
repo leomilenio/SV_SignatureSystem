@@ -72,7 +72,6 @@ def root(db: Session = Depends(get_db)):
         return RedirectResponse(url="/login")
     if not business_crud.business_exists(db):
         return RedirectResponse(url="/config")
-
     index_file = os.path.join(FRONTEND_DIST, "index.html")
     if os.path.exists(index_file):
         return FileResponse(index_file)
@@ -85,9 +84,8 @@ async def health_check():
 
 
 @app.get("/{full_path:path}", include_in_schema=False)
-def spa_router(full_path: str):
+async def spa_router(full_path: str):
     index_file = os.path.join(FRONTEND_DIST, "index.html")
     if os.path.exists(index_file):
         return FileResponse(index_file)
     return {"detail": "Not Found"}
-

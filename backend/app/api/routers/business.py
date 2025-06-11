@@ -122,4 +122,4 @@ def delete_business(
     if not success:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Business not found")
     background_tasks.add_task(broadcast_event, "business_deleted", {"id": 1})
-
+    return None
