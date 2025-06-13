@@ -27,6 +27,8 @@ class MediaRead(MediaBase):
     id: int
     filepath: str
     created_at: datetime
+    file_url: Optional[str] = None
+    served_filename: Optional[str] = None
 
     class Config:
         orm_mode = True

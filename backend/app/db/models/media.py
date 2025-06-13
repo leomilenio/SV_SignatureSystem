@@ -26,4 +26,5 @@ class Media(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
     # Relationships
-    schedules = relationship("Schedule", back_populates="media")
+    schedules = relationship("Schedule", back_populates="media", cascade="all, delete-orphan")
+    playlist_media = relationship("PlaylistMedia", back_populates="media", cascade="all, delete-orphan")

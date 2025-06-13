@@ -1,65 +1,85 @@
 <template>
   <div class="login-container">
-    <q-card class="login-card">
-      <q-card-section class="text-center">
-        <div class="login-header">
-          <q-icon name="video_library" size="3rem" color="primary" />
-          <h4 class="q-my-md">Pochtecayotl Signance System</h4>
-          <p class="text-grey-6">Sistema de Gestión de Contenido Digital</p>
-        </div>
-      </q-card-section>
-
-      <q-card-section>
-        <q-form @submit="handleLogin" class="q-gutter-md">
-          <q-input
-            v-model="credentials.username"
-            label="Usuario"
-            outlined
-            :rules="[val => !!val || 'El usuario es requerido']"
-            ref="usernameRef"
-          >
-            <template v-slot:prepend>
-              <q-icon name="person" />
-            </template>
-          </q-input>
-
-          <q-input
-            v-model="credentials.password"
-            label="Contraseña"
-            type="password"
-            outlined
-            :rules="[val => !!val || 'La contraseña es requerida']"
-            ref="passwordRef"
-          >
-            <template v-slot:prepend>
-              <q-icon name="lock" />
-            </template>
-          </q-input>
-
-          <div class="q-mt-lg">
-            <q-btn
-              type="submit"
-              label="Iniciar Sesión"
-              color="primary"
-              size="md"
-              class="full-width"
-              :loading="isLoading"
-              :disable="!credentials.username || !credentials.password"
-            />
+    <!-- Toggle de tema en esquina superior derecha -->
+    <div class="theme-toggle-container">
+      <ThemeToggle />
+    </div>
+    
+    <div class="login-content">
+      <q-card class="login-card">
+        <q-card-section class="text-center login-header-section">
+          <div class="login-header">
+            <div class="logo-container">
+              <q-icon name="video_library" class="main-logo" />
+              <div class="logo-glow"></div>
+            </div>
+            <h2 class="app-title">Pochtecayotl</h2>
+            <h3 class="app-subtitle-main">Signance System</h3>
+            <p class="app-subtitle">Sistema de Gestión de Contenido Digital LGBT+</p>
+            <div class="pride-divider"></div>
           </div>
-        </q-form>
-      </q-card-section>
+        </q-card-section>
 
-      <q-card-section class="text-center">
-        <q-btn
-          flat
-          label="Probar Conexión Backend"
-          color="secondary"
-          @click="testBackendConnection"
-          size="sm"
-        />
-      </q-card-section>
-    </q-card>
+        <q-card-section class="login-form-section">
+          <q-form @submit="handleLogin" class="login-form">
+            <div class="input-group">
+              <q-input
+                v-model="credentials.username"
+                label="Usuario"
+                outlined
+                dense
+                :rules="[val => !!val || 'El usuario es requerido']"
+                ref="usernameRef"
+                class="modern-input"
+              >
+                <template v-slot:prepend>
+                  <q-icon name="person" class="input-icon" />
+                </template>
+              </q-input>
+            </div>
+
+            <div class="input-group">
+              <q-input
+                v-model="credentials.password"
+                label="Contraseña"
+                type="password"
+                outlined
+                dense
+                :rules="[val => !!val || 'La contraseña es requerida']"
+                ref="passwordRef"
+                class="modern-input"
+              >
+                <template v-slot:prepend>
+                  <q-icon name="lock" class="input-icon" />
+                </template>
+              </q-input>
+            </div>
+
+            <div class="login-actions">
+              <q-btn
+                type="submit"
+                label="Iniciar Sesión"
+                class="login-btn"
+                size="md"
+                unelevated
+                :loading="isLoading"
+                :disable="!credentials.username || !credentials.password"
+              />
+            </div>
+          </q-form>
+        </q-card-section>
+
+        <q-card-section class="text-center footer-section">
+          <q-btn
+            flat
+            label="Probar Conexión"
+            @click="testBackendConnection"
+            size="sm"
+            class="test-btn"
+          />
+        </q-card-section>
+      </q-card>
+    </div>
 
     <!-- Setup inicial del administrador -->
     <q-dialog v-model="showSetupDialog" persistent>
@@ -109,13 +129,19 @@ import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useToast } from 'vue-toastification'
 import { authAPI } from '../services/api'
+import { useTheme } from '../composables/useTheme'
+import ThemeToggle from '../components/ThemeToggle.vue'
 
 export default {
   name: 'LoginView',
+  components: {
+    ThemeToggle
+  },
   setup() {
     const router = useRouter()
     const $q = useQuasar()
     const toast = useToast()
+    const { loadTheme } = useTheme()
 
     // Estados reactivos
     const isLoading = ref(false)
@@ -238,6 +264,7 @@ export default {
     }
 
     onMounted(() => {
+      loadTheme()
       checkExistingAuth()
       checkSetupStatus()
     })
@@ -262,33 +289,333 @@ export default {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #000000 0%, #784F17 10%, #E70000 25%, #FF8C00 40%, #FFEF00 55%, #00811F 70%, #00A7E4 85%, #760089 100%);
-  padding: 20px;
+  background: var(--gradient-main);
+  padding: 2rem;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.theme-toggle-container {
+  position: absolute;
+  top: 2rem;
+  right: 2rem;
+  z-index: 100;
+}
+
+.login-content {
+  width: 100%;
+  max-width: 420px;
+  position: relative;
 }
 
 .login-card {
-  width: 100%;
-  max-width: 400px;
-  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+  box-shadow: var(--shadow-xl);
+  transition: all 0.3s ease;
 }
 
-.login-header {
-  padding: 20px 0;
+.login-header-section {
+  padding: 2.5rem 2rem 1.5rem;
+  background: var(--gradient-light);
+  border-bottom: 1px solid var(--border);
 }
 
-.login-header h4 {
-  margin: 16px 0 8px 0;
+.logo-container {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 1rem;
+}
+
+.main-logo {
+  font-size: 3.5rem;
+  background: var(--gradient-text);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+}
+
+.logo-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 70px;
+  height: 70px;
+  background: radial-gradient(circle, var(--primary-alpha), transparent);
+  border-radius: 50%;
+  animation: pulse 3s ease-in-out infinite;
+  z-index: -1;
+}
+
+@keyframes pulse {
+  0%, 100% { 
+    transform: translate(-50%, -50%) scale(1); 
+    opacity: 0.4; 
+  }
+  50% { 
+    transform: translate(-50%, -50%) scale(1.1); 
+    opacity: 0.7; 
+  }
+}
+
+.app-title {
+  margin: 0 0 0.2rem 0;
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: var(--gradient-text);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.1;
+}
+
+.app-subtitle-main {
+  margin: 0 0 0.8rem 0;
+  font-size: 1.4rem;
   font-weight: 600;
-  color: #1976d2;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+
+.app-subtitle {
+  margin: 0 0 1rem 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  opacity: 0.9;
+  line-height: 1.3;
+}
+
+.pride-divider {
+  width: 50px;
+  height: 3px;
+  background: var(--gradient-accent);
+  border-radius: 2px;
+  margin: 0 auto;
+}
+
+.login-form-section {
+  padding: 1.5rem 2rem;
+  background: var(--background);
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.input-group {
+  position: relative;
+}
+
+.modern-input {
+  border-radius: 10px !important;
+}
+
+.modern-input :deep(.q-field__control) {
+  border-radius: 10px !important;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
+  min-height: 48px;
+}
+
+.modern-input :deep(.q-field__control:hover) {
+  border-color: var(--primary);
+}
+
+.modern-input :deep(.q-field__control.q-field__control--focused) {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-alpha);
+}
+
+.modern-input :deep(.q-field__label) {
+  color: var(--text-secondary);
+}
+
+.modern-input :deep(.q-field__native) {
+  color: var(--text-primary);
+}
+
+.input-icon {
+  color: var(--primary);
+}
+
+.login-actions {
+  margin-top: 0.5rem;
+}
+
+.login-btn {
+  width: 100%;
+  height: 48px;
+  border-radius: 10px;
+  background: var(--gradient-button);
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  border: none;
+  box-shadow: var(--shadow-md);
+}
+
+.login-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+}
+
+.login-btn:active {
+  transform: translateY(0);
+}
+
+.login-btn:disabled {
+  opacity: 0.6;
+  transform: none;
+  box-shadow: none;
+}
+
+.footer-section {
+  padding: 1rem 2rem 1.5rem;
+  border-top: 1px solid var(--border);
+  background: var(--background);
+}
+
+.test-btn {
+  color: var(--secondary);
+  transition: all 0.2s ease;
+  border-radius: 8px;
+}
+
+.test-btn:hover {
+  background: var(--hover-secondary);
+  transform: translateY(-1px);
+}
+
+/* Dialog de configuración */
+.q-dialog .q-card {
+  background: var(--surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-xl);
+}
+
+.q-dialog .q-card-section {
+  background: var(--background);
+}
+
+.q-dialog .q-card-actions {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+
+/* Input fields en el dialog */
+.q-dialog .q-input :deep(.q-field__control) {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.q-dialog .q-input :deep(.q-field__control:hover) {
+  border-color: var(--primary);
+}
+
+.q-dialog .q-input :deep(.q-field__control.q-field__control--focused) {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-alpha);
+}
+
+/* Botones del dialog */
+.q-dialog .q-btn {
+  border-radius: 8px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .login-container {
+    padding: 1rem;
+  }
+  
+  .theme-toggle-container {
+    top: 1rem;
+    right: 1rem;
+  }
+  
+  .login-header-section {
+    padding: 2rem 1.5rem 1rem;
+  }
+  
+  .login-form-section {
+    padding: 1.2rem 1.5rem;
+  }
+  
+  .app-title {
+    font-size: 1.8rem;
+  }
+  
+  .app-subtitle-main {
+    font-size: 1.2rem;
+  }
+  
+  .main-logo {
+    font-size: 3rem;
+  }
+  
+  .login-content {
+    max-width: 100%;
+  }
+  
+  .footer-section {
+    padding: 0.8rem 1.5rem 1.2rem;
+  }
 }
 
 @media (max-width: 480px) {
   .login-container {
-    padding: 10px;
+    padding: 0.5rem;
   }
   
-  .login-card {
-    max-width: 100%;
+  .login-header-section {
+    padding: 1.5rem 1rem 0.8rem;
+  }
+  
+  .login-form-section {
+    padding: 1rem;
+  }
+  
+  .app-title {
+    font-size: 1.6rem;
+  }
+  
+  .app-subtitle-main {
+    font-size: 1.1rem;
+  }
+  
+  .app-subtitle {
+    font-size: 0.85rem;
+  }
+  
+  .main-logo {
+    font-size: 2.5rem;
+  }
+  
+  .footer-section {
+    padding: 0.8rem 1rem 1rem;
+  }
+  
+  .login-btn {
+    height: 46px;
+    font-size: 0.95rem;
+  }
+  
+  .modern-input :deep(.q-field__control) {
+    min-height: 46px;
   }
 }
 </style>

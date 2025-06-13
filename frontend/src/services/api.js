@@ -194,6 +194,26 @@ export const scheduleAPI = {
   delete: (scheduleId) => api.delete(`/schedules/${scheduleId}`)
 }
 
+export const playlistAPI = {
+  // Listar todas las playlists
+  list: (skip = 0, limit = 100) => api.get(`/schedules/playlist-list?skip=${skip}&limit=${limit}`),
+  
+  // Obtener playlist específica
+  get: (playlistId) => api.get(`/schedules/playlist-get/${playlistId}`),
+  
+  // Obtener estadísticas de playlists
+  getStats: () => api.get('/schedules/playlist-stats'),
+  
+  // Crear nueva playlist
+  create: (playlistData) => api.post('/schedules/playlist-create', playlistData),
+  
+  // Actualizar playlist
+  update: (playlistId, updateData) => api.put(`/schedules/playlist-update/${playlistId}`, updateData),
+  
+  // Eliminar playlist
+  delete: (playlistId) => api.delete(`/schedules/playlist-delete/${playlistId}`)
+}
+
 // Función utilitaria para manejar errores de archivo
 export const handleFileError = (error, toast) => {
   if (error.response?.status === 413) {

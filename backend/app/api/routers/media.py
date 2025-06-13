@@ -83,7 +83,16 @@ def list_media(
     current_user: User = Depends(get_current_user)
 ):
     """List all media files"""
-    return media_crud.list_media(db, skip=skip, limit=limit)
+    media_list = media_crud.list_media(db, skip=skip, limit=limit)
+    
+    # Agregar información de URL para cada media
+    for media in media_list:
+        import os
+        served_filename = os.path.basename(media.filepath)
+        media.file_url = f"/uploads/{served_filename}"
+        media.served_filename = served_filename
+    
+    return media_list
 
 
 @router.get("/{media_id}", response_model=MediaRead)
@@ -99,6 +108,14 @@ def get_media(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Media not found"
         )
+    
+    # Agregar información de URL
+    import os
+    served_filename = os.path.basename(media.filepath)
+    media.file_url = f"/uploads/{served_filename}"
+    media.served_filename = served_filename
+    
+    return media
     return media
 
 

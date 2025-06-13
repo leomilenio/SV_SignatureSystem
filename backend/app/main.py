@@ -13,7 +13,7 @@ from app.db import init_db, get_db
 from sqlalchemy.orm import Session
 from app.db.crud.user_crud import count_users
 from app.db.crud import business_crud
-from app.api.routers import auth, media, schedules, business, ws
+from app.api.routers import auth, media, schedules, business, ws, playlists
 
 
 @asynccontextmanager
@@ -51,9 +51,10 @@ app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads"
 # Serve frontend if built
 FRONTEND_DIST = os.path.join(os.path.dirname(__file__), "../../frontend/dist")
 if os.path.exists(os.path.join(FRONTEND_DIST, "index.html")):
+    # Servir carpeta dist completa bajo /static (css/, js/, fonts/, favicon.ico)
     app.mount(
         "/static",
-        StaticFiles(directory=os.path.join(FRONTEND_DIST, "assets")),
+        StaticFiles(directory=FRONTEND_DIST),
         name="static",
     )
 
@@ -61,6 +62,7 @@ if os.path.exists(os.path.join(FRONTEND_DIST, "index.html")):
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(media.router, prefix="/api/media", tags=["media"])
 app.include_router(schedules.router, prefix="/api/schedules", tags=["schedules"])
+app.include_router(playlists.router, prefix="/api/playlists", tags=["playlists"])
 app.include_router(business.router, prefix="/api/business", tags=["business"])
 app.include_router(ws.router)
 

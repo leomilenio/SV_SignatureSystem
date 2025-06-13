@@ -5,6 +5,7 @@ import Error_View from '../views/Error_View.vue'
 import SelectionView from '../views/SelectionView.vue'
 import PlayerView from '../views/PlayerView.vue'
 import ConfigView from '../views/ConfigView.vue'
+import AdminView from '../views/AdminView.vue'
 
 const routes = [
   {
@@ -59,6 +60,16 @@ const routes = [
     meta: {
       requiresAuth: false,
       title: 'Reproductor - Pochtecayotl Signance System'
+    }
+  },
+  {
+    path: '/admin',
+    name: 'Admin',
+    component: AdminView,
+    meta: { 
+      requiresAuth: true, 
+      role: 'admin',
+      title: 'Dashboard Admin - Pochtecayotl Signance System'
     }
   }
   // Futuras rutas para el sistema completo:

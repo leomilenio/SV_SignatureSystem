@@ -19,7 +19,8 @@
     "socket.io-client": "^4.7.0",
     "vue": "^3.3.0",
     "vue-router": "^4.2.0",
-    "vue-toastification": "^2.0.0-rc.5"
+    "vue-toastification": "^2.0.0-rc.5",
+    "vuedraggable": "^4.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.27.4",

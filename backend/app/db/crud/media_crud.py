@@ -83,10 +83,20 @@ def delete_media(db: Session, media_id: int) -> bool:
     if not db_media:
         return False
     
+    # Primero eliminar o actualizar las referencias en schedules
+    from app.db.models.schedule import Schedule
+    schedules_with_media = db.query(Schedule).filter(Schedule.media_id == media_id).all()
+    
+    for schedule in schedules_with_media:
+        # Opción 1: Eliminar el schedule completo
+        db.delete(schedule)
+        # Opción 2: Alternativamente, podrías poner media_id = NULL si cambias el modelo
+    
     # Eliminar archivo físico
     if os.path.exists(db_media.filepath):
         os.remove(db_media.filepath)
     
+    # Ahora eliminar el media
     db.delete(db_media)
     db.commit()
     return True

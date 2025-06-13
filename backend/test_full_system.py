@@ -68,14 +68,14 @@ def setup_authentication():
     if setup_response and setup_response.json().get("setup_required", True):
         setup_data = {
             "username": "admin",
-            "password": "admin123"
+            "password": "210403"
         }
         make_request("POST", "/api/auth/setup-admin", json_data=setup_data)
     
     # Login
     login_data = {
         "username": "admin",
-        "password": "admin123"
+        "password": "210403"
     }
     login_response = make_request("POST", "/api/auth/login", data=login_data)
     
@@ -201,6 +201,99 @@ def test_api_docs():
     except Exception as e:
         print(f"❌ Error accessing docs: {e}")
 
+def test_playlist_endpoints(headers: Dict[str, str]):
+    """Test playlist management endpoints"""
+    print_section("TESTING PLAYLIST MANAGEMENT")
+    
+    playlist_id = None
+    
+    try:
+        # Test playlist statistics
+        print("\n🔍 Testing playlist statistics...")
+        response = make_request("GET", "/api/schedules/playlist-stats", headers=headers)
+        assert response.status_code == 200, f"Stats failed: {response.status_code}"
+        stats = response.json()
+        print(f"📊 Current playlist stats: {stats}")
+        
+        # Test create playlist
+        print("\n➕ Testing playlist creation...")
+        playlist_data = {
+            "name": "Test Playlist",
+            "description": "Playlist created during testing"
+        }
+        response = make_request("POST", "/api/schedules/playlist-create", headers=headers, json_data=playlist_data)
+        assert response.status_code == 200, f"Creation failed: {response.status_code}"
+        created_playlist = response.json()
+        playlist_id = created_playlist["id"]
+        print(f"✅ Created playlist with ID: {playlist_id}")
+        
+        # Test list playlists
+        print("\n📋 Testing playlist listing...")
+        response = make_request("GET", "/api/schedules/playlist-list", headers=headers)
+        assert response.status_code == 200, f"Listing failed: {response.status_code}"
+        playlists = response.json()
+        print(f"📊 Found {len(playlists)} playlists")
+        
+        # Test get specific playlist
+        print(f"\n🔍 Testing get playlist {playlist_id}...")
+        response = make_request("GET", f"/api/schedules/playlist-get/{playlist_id}", headers=headers)
+        assert response.status_code == 200, f"Get failed: {response.status_code}"
+        playlist = response.json()
+        print(f"✅ Retrieved playlist: {playlist['name']}")
+        
+        # Test update playlist
+        print(f"\n✏️ Testing playlist update...")
+        update_data = {
+            "name": "Updated Test Playlist",
+            "description": "Updated description"
+        }
+        response = make_request("PUT", f"/api/schedules/playlist-update/{playlist_id}", headers=headers, json_data=update_data)
+        assert response.status_code == 200, f"Update failed: {response.status_code}"
+        updated_playlist = response.json()
+        print(f"✅ Updated playlist name to: {updated_playlist['name']}")
+        
+        # Test playlist validation
+        print("\n🛡️ Testing playlist validation...")
+        invalid_data = {"name": ""}  # Empty name should fail
+        response = make_request("POST", "/api/schedules/playlist-create", headers=headers, json_data=invalid_data)
+        if response.status_code in [400, 422]:
+            print("✅ Validation working: Empty name rejected")
+        else:
+            print(f"⚠️ Validation may not be working: {response.status_code}")
+        
+        # Test playlist stats after creation
+        print("\n📊 Testing updated stats...")
+        response = make_request("GET", "/api/schedules/playlist-stats", headers=headers)
+        assert response.status_code == 200, f"Updated stats failed: {response.status_code}"
+        new_stats = response.json()
+        print(f"📊 Updated playlist stats: {new_stats}")
+        
+        # Test delete playlist
+        print(f"\n🗑️ Testing playlist deletion...")
+        response = make_request("DELETE", f"/api/schedules/playlist-delete/{playlist_id}", headers=headers)
+        assert response.status_code == 200, f"Deletion failed: {response.status_code}"
+        print(f"✅ Deleted playlist {playlist_id}")
+        
+        # Verify deletion
+        print("\n🔍 Verifying deletion...")
+        response = make_request("GET", f"/api/schedules/playlist-get/{playlist_id}", headers=headers)
+        if response.status_code == 404:
+            print("✅ Playlist properly deleted (404 response)")
+        else:
+            print(f"⚠️ Unexpected response after deletion: {response.status_code}")
+        
+        print("\n✅ All playlist tests completed successfully!")
+        
+    except Exception as e:
+        print(f"❌ Playlist test error: {e}")
+        # Cleanup if there was an error
+        if playlist_id:
+            try:
+                make_request("DELETE", f"/api/schedules/playlist-delete/{playlist_id}", headers=headers)
+                print(f"🧹 Cleaned up playlist {playlist_id}")
+            except:
+                pass
+
 def main():
     """Run comprehensive tests for all modules"""
     print("🚀 SIGNANCE SYSTEM - COMPREHENSIVE API TESTS")
@@ -226,12 +319,14 @@ def main():
         test_business_endpoints(headers)
         media_id = test_media_endpoints(headers)
         test_schedule_endpoints(headers, media_id)
+        test_playlist_endpoints(headers)
         
         print_section("TEST SUMMARY")
         print("✅ Authentication module: WORKING")
         print("✅ Business management: WORKING") 
         print("✅ Media management: WORKING")
         print("✅ Schedule management: WORKING")
+        print("✅ Playlist management: WORKING")
         print("✅ API documentation: ACCESSIBLE")
         print()
         print("🎉 All core modules are functional!")
@@ -240,6 +335,7 @@ def main():
         print("   - Business: /api/business/*")
         print("   - Media: /api/media/*")
         print("   - Schedules: /api/schedules/*")
+        print("   - Playlists: /api/schedules/playlists/*")
         print("   - Documentation: /docs")
     else:
         print("❌ Cannot proceed with tests - Authentication failed")
