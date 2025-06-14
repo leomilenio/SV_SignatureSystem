@@ -318,14 +318,23 @@ def delete_schedule(
 # ADVANCED SCHEDULING ENDPOINTS
 # =============================================================================
 
-@router.get("/active", tags=["advanced-scheduling"])
+@router.get("/schedules/active", tags=["advanced-scheduling"])
 def get_active_schedules(
     schedule_type: str = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Get all active schedules, optionally filtered by type (simple/advanced)"""
-    schedules = schedule_crud.get_active_schedules(db, schedule_type=schedule_type)
+    # Validar schedule_type si se proporciona
+    if schedule_type and schedule_type not in ["simple", "advanced"]:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=422, detail="schedule_type must be 'simple' or 'advanced'")
+    
+    try:
+        schedules = schedule_crud.get_active_schedules(db, schedule_type=schedule_type)
+    except Exception as e:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=500, detail=f"Error fetching schedules: {str(e)}")
     
     result = []
     for schedule in schedules:

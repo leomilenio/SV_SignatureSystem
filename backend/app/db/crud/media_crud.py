@@ -29,7 +29,8 @@ def save_upload_file(file: UploadFile) -> str:
         content = file.file.read()
         buffer.write(content)
     
-    return filepath
+    # Devolver filepath relativo para servir archivos (sin el "media" inicial)
+    return f"/uploads/{unique_filename}"
 
 
 def create_media(db: Session, media_in: MediaCreate, file: UploadFile = None, filepath_override: str = None) -> Media:
@@ -100,3 +101,34 @@ def delete_media(db: Session, media_id: int) -> bool:
     db.delete(db_media)
     db.commit()
     return True
+
+
+def get_media_playlists(db: Session, media_id: int):
+    """Get all playlists that contain a specific media with order and duration info"""
+    from app.db.models.playlist import Playlist
+    from app.db.models.playlist_media import PlaylistMedia
+    
+    result = db.execute(
+        select(
+            Playlist.id,
+            Playlist.name,
+            Playlist.description,
+            PlaylistMedia.order_index,
+            PlaylistMedia.duration
+        )
+        .join(PlaylistMedia, Playlist.id == PlaylistMedia.playlist_id)
+        .where(PlaylistMedia.media_id == media_id)
+        .order_by(Playlist.name)
+    )
+    
+    playlists = []
+    for row in result:
+        playlists.append({
+            'id': row.id,
+            'name': row.name,
+            'description': row.description,
+            'order_index': row.order_index,
+            'duration': row.duration
+        })
+    
+    return playlists

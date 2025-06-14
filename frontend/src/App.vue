@@ -5,30 +5,29 @@
 </template>
 
 <script>
+import backendDetector from './services/backendDetector'
+
 export default {
   name: 'App',
   mounted() {
     // Configuración global de la aplicación
     console.log('🎬 Pochtecayotl Signance System - Frontend iniciado')
     
-    // Verificar conectividad con el backend
+    // Verificar conectividad con el backend usando auto-detección
     this.checkBackendConnection()
   },
   methods: {
     async checkBackendConnection() {
       try {
-        const response = await fetch('http://127.0.0.1:8002/health')
-        if (response.ok) {
-          console.log('✅ Conexión con backend establecida')
-        } else {
-          console.warn('⚠️ Backend responde pero con errores')
-        }
+        // Intentar detectar el backend automáticamente
+        const backendInfo = await backendDetector.detectBackend()
+        console.log(`✅ Conexión con backend establecida en ${backendInfo.baseUrl}`)
       } catch (error) {
         console.error('❌ No se puede conectar con el backend:', error)
         this.$q.notify({
           type: 'warning',
           message: 'No se puede conectar con el servidor',
-          caption: 'Verifica que el backend esté ejecutándose'
+          caption: 'Verifica que el backend esté ejecutándose en el rango de puertos 8000-8010'
         })
       }
     }

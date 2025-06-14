@@ -212,8 +212,8 @@ export default {
         
         toast.success(`¡Bienvenido, ${credentials.username}!`)
         
-        // Redirigir a página de prueba exitosa
-        router.push('/test-ok')
+        // Redirigir al reproductor después del login exitoso
+        router.push('/player')
         
       } catch (error) {
         console.error('Error en login:', error)
@@ -239,7 +239,7 @@ export default {
       })
 
       try {
-        const response = await fetch('http://127.0.0.1:8002/health')
+        const response = await fetch('http://127.0.0.1:8000/health')
         if (response.ok) {
           const data = await response.json()
           toast.success(`Conexión exitosa: ${data.status}`)

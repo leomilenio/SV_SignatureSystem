@@ -95,10 +95,9 @@ def update_business_info(
 
 @router.get("/logo")
 def get_business_logo(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    db: Session = Depends(get_db)
 ):
-    """Get business logo as base64"""
+    """Get business logo as base64 (public endpoint)"""
     business = business_crud.get_business(db)
     if not business or not business.logo:
         raise HTTPException(

@@ -132,7 +132,7 @@
           
           <div class="detail-item">
             <span class="detail-label">URL del Backend</span>
-            <span class="detail-value">http://127.0.0.1:8002</span>
+            <span class="detail-value">{{ backendStatus.url }}</span>
           </div>
           
           <div class="detail-item">
@@ -159,6 +159,7 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'vue-toastification'
 import { authAPI, mediaAPI, businessAPI, scheduleAPI } from '../services/api'
+import backendDetector from '../services/backendDetector'
 import ThemeToggle from '../components/ThemeToggle.vue'
 import { useTheme } from '../composables/useTheme'
 
@@ -176,7 +177,9 @@ export default {
     const userInfo = ref({})
     const backendStatus = reactive({
       connected: false,
-      lastCheck: null
+      lastCheck: null,
+      url: 'Detectando...',
+      port: null
     })
 
     // Información del token
@@ -258,11 +261,42 @@ export default {
     // Verificar estado del backend
     const checkBackendStatus = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:8002/health')
-        backendStatus.connected = response.ok
+        console.log('🔍 Verificando estado del backend...')
+        
+        // Primero intentar obtener la información desde el detector
+        const cached = backendDetector.getCachedBackend()
+        if (cached) {
+          console.log('📦 Usando información cached del backend:', cached)
+          backendStatus.url = cached.baseUrl
+          backendStatus.port = cached.port
+          
+          // Verificar que el backend siga respondiendo
+          const isWorking = await backendDetector.testPort(cached.port)
+          backendStatus.connected = isWorking
+          backendStatus.lastCheck = new Date()
+          
+          if (isWorking) {
+            console.log('✅ Backend confirmado desde caché')
+            return
+          } else {
+            console.log('❌ Backend cached no responde, detectando nuevamente...')
+          }
+        }
+        
+        // Si no hay caché o no funciona, detectar automáticamente
+        const detection = await backendDetector.detectBackend()
+        backendStatus.connected = true
+        backendStatus.url = detection.baseUrl
+        backendStatus.port = detection.port
         backendStatus.lastCheck = new Date()
+        
+        console.log('✅ Backend detectado exitosamente:', detection)
+        
       } catch (error) {
+        console.error('❌ Error detectando backend:', error)
         backendStatus.connected = false
+        backendStatus.url = 'No disponible'
+        backendStatus.port = null
         backendStatus.lastCheck = new Date()
       }
     }

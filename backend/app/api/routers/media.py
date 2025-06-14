@@ -14,6 +14,7 @@ from app.api.routers.auth import get_current_user
 from app.db.models.user import User
 from app.utils import ffmpeg
 from app.core.websocket_manager import broadcast_event
+from app.config import settings
 
 router = APIRouter()
 
@@ -30,9 +31,14 @@ async def create_media(
 ):
     """Upload new media file (image or video). Obtiene metadata real y genera thumbnail si es video."""
     try:
-        # 1. Guardar archivo subido
-        saved_filepath = media_crud.save_upload_file(file)
-        saved_path = Path(saved_filepath)
+        # 1. Guardar archivo subido y separar ruta URL de ruta de disco
+        url_filepath = media_crud.save_upload_file(file)
+        # Construir ruta de disco real basada en UPLOAD_DIR y nombre de archivo
+        filename_only = os.path.basename(url_filepath)
+        disk_path = Path(settings.UPLOAD_DIR) / filename_only
+        # Usar disk_path para operaciones con ffmpeg y url_filepath para DB y respuestas
+        saved_filepath = url_filepath
+        saved_path = disk_path
 
         # 2. Obtener metadata real
         real_duration = duration
@@ -46,8 +52,8 @@ async def create_media(
                 'streams': info.get('streams')
             }
             # 3. Generar thumbnail para video
-            thumb_path = saved_path.parent / f"{saved_path.stem}_thumb.jpg"
-            ffmpeg.generate_thumbnail(saved_path, thumb_path, time_offset=1.0)
+            thumb_path = disk_path.parent / f"{disk_path.stem}_thumb.jpg"
+            ffmpeg.generate_thumbnail(disk_path, thumb_path, time_offset=1.0)
         else:
             # Si es imagen, solo obtener tamaño de archivo
             extra_metadata = {'size': saved_path.stat().st_size}
@@ -58,7 +64,7 @@ async def create_media(
             media_type=media_type,
             duration=real_duration
         )
-        db_media = media_crud.create_media(db=db, media_in=media_data, file=None, filepath_override=saved_filepath)
+        db_media = media_crud.create_media(db=db, media_in=media_data, file=None, filepath_override=url_filepath)
         background_tasks.add_task(broadcast_event, "media_created", {"id": db_media.id})
 
         # 5. (Opcional) Guardar metadata extra en un campo adicional si lo deseas
@@ -154,3 +160,22 @@ def delete_media(
         )
     background_tasks.add_task(broadcast_event, "media_deleted", {"id": media_id})
     return {"message": "Media deleted successfully"}
+
+
+@router.get("/{media_id}/playlists")
+def get_media_playlists(
+    media_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get all playlists that contain a specific media"""
+    try:
+        media = media_crud.get_media(db, media_id)
+        if not media:
+            raise HTTPException(status_code=404, detail="Media not found")
+        
+        # Obtener playlists con información de orden y duración
+        playlists = media_crud.get_media_playlists(db, media_id)
+        return playlists
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

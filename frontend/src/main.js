@@ -2,6 +2,9 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
 
+// Inicializar API con auto-detección del backend
+import { initializeAPI } from './services/api'
+
 // Quasar Framework
 import { 
   Quasar, 
@@ -40,7 +43,9 @@ import {
   QTime,
   QToggle,
   QDialog,
-  QExpansionItem
+  QExpansionItem,
+  QTooltip,
+  QBanner
 } from 'quasar'
 import quasarLang from 'quasar/lang/es'
 import quasarIconSet from 'quasar/icon-set/material-icons'
@@ -100,7 +105,9 @@ app.use(Quasar, {
     QTime,
     QToggle,
     QDialog,
-    QExpansionItem
+    QExpansionItem,
+    QTooltip,
+    QBanner
   },
   lang: quasarLang,
   iconSet: quasarIconSet,
@@ -130,5 +137,11 @@ const toastOptions = {
 
 app.use(Toast, toastOptions)
 app.use(router)
+
+// Inicializar la detección del backend en segundo plano
+initializeAPI().catch(error => {
+  console.warn('⚠️ No se pudo conectar al backend al iniciar:', error.message)
+  console.log('🔄 La detección se reintentará automáticamente en las próximas peticiones')
+})
 
 app.mount('#app')

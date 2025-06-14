@@ -15,6 +15,7 @@ class PlaylistMedia(Base):
     playlist_id = Column(Integer, ForeignKey("playlists.id"), nullable=False, index=True)
     media_id = Column(Integer, ForeignKey("media.id"), nullable=False, index=True)
     order_index = Column(Integer, nullable=False, default=0)  # Orden dentro de la playlist
+    duration = Column(Integer, nullable=True)  # Duración específica en esta playlist (segundos), None = usar duración original del media
     added_at = Column(DateTime(timezone=True), server_default=func.now())
     
     # Relationships

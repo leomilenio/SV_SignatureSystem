@@ -67,6 +67,11 @@ app.include_router(business.router, prefix="/api/business", tags=["business"])
 app.include_router(ws.router)
 
 
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "module": "auth"}
+
+
 @app.get("/", include_in_schema=False)
 async def root(db: Session = Depends(get_db)):
     """Serve SPA entry or redirect based on setup state"""
@@ -74,14 +79,21 @@ async def root(db: Session = Depends(get_db)):
         return RedirectResponse(url="/login")
     if not business_crud.business_exists(db):
         return RedirectResponse(url="/config")
-
-@app.get("/health")
-async def health_check():
-    return {"status": "healthy", "module": "auth"}
+    
+    # Servir el frontend si existe
+    index_file = os.path.join(FRONTEND_DIST, "index.html")
+    if os.path.exists(index_file):
+        return FileResponse(index_file)
+    return {"detail": "Frontend not built"}
 
 
 @app.get("/{full_path:path}", include_in_schema=False)
 async def spa_router(full_path: str):
+    """Catch-all para rutas del frontend - debe ir AL FINAL"""
+    # Evitar interferir con rutas de API
+    if full_path.startswith("api/"):
+        return {"detail": "API endpoint not found"}
+    
     index_file = os.path.join(FRONTEND_DIST, "index.html")
     if os.path.exists(index_file):
         return FileResponse(index_file)

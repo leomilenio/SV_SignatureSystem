@@ -1,95 +1,65 @@
-import { io } from 'socket.io-client'
-
 class WebSocketService {
   constructor() {
     this.socket = null
     this.connected = false
     this.listeners = new Map()
+    this.reconnectAttempts = 0
+    this.maxReconnectAttempts = 5
+    this.reconnectDelay = 1000
   }
 
   // Conectar al WebSocket del servidor
-  connect(serverUrl = 'http://127.0.0.1:8002') {
+  connect(serverUrl = 'ws://127.0.0.1:8002/ws') {
     try {
-      // Configurar socket con autenticación
-      const token = localStorage.getItem('signance_token')
-      
-      this.socket = io(serverUrl, {
-        auth: {
-          token: token
-        },
-        reconnection: true,
-        reconnectionDelay: 1000,
-        reconnectionAttempts: 5,
-        timeout: 20000
-      })
+      // Crear conexión WebSocket nativa
+      this.socket = new WebSocket(serverUrl)
 
       // Eventos de conexión
-      this.socket.on('connect', () => {
+      this.socket.onopen = () => {
         console.log('✅ WebSocket conectado')
         this.connected = true
+        this.reconnectAttempts = 0
         this.emit('connection-status', { connected: true })
-      })
+      }
 
-      this.socket.on('disconnect', (reason) => {
-        console.log('❌ WebSocket desconectado:', reason)
+      this.socket.onclose = (event) => {
+        console.log('❌ WebSocket desconectado:', event.code, event.reason)
         this.connected = false
-        this.emit('connection-status', { connected: false, reason })
-      })
+        this.emit('connection-status', { connected: false, reason: event.reason })
+        
+        // Intentar reconectar automáticamente
+        if (this.reconnectAttempts < this.maxReconnectAttempts) {
+          this.reconnectAttempts++
+          console.log(`🔄 Intentando reconectar (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`)
+          setTimeout(() => this.connect(serverUrl), this.reconnectDelay * this.reconnectAttempts)
+        }
+      }
 
-      this.socket.on('connect_error', (error) => {
+      this.socket.onerror = (error) => {
         console.error('❌ Error de conexión WebSocket:', error)
         this.emit('connection-error', error)
-      })
+      }
 
-      // Eventos específicos del sistema
-      this.setupSignanceEvents()
+      this.socket.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data)
+          if (message.event && message.data) {
+            this.emit(message.event, message.data)
+          }
+        } catch (error) {
+          console.error('Error parseando mensaje WebSocket:', error)
+        }
+      }
 
     } catch (error) {
       console.error('Error inicializando WebSocket:', error)
     }
   }
 
-  // Configurar eventos específicos de Signance
-  setupSignanceEvents() {
-    if (!this.socket) return
-
-    // Eventos de media/multimedia
-    this.socket.on('media-upload-progress', (data) => {
-      this.emit('media-upload-progress', data)
-    })
-
-    this.socket.on('media-processing-complete', (data) => {
-      this.emit('media-processing-complete', data)
-    })
-
-    this.socket.on('media-processing-error', (data) => {
-      this.emit('media-processing-error', data)
-    })
-
-    // Eventos de programación/scheduling
-    this.socket.on('schedule-updated', (data) => {
-      this.emit('schedule-updated', data)
-    })
-
-    this.socket.on('playback-status', (data) => {
-      this.emit('playback-status', data)
-    })
-
-    // Eventos del sistema
-    this.socket.on('system-notification', (data) => {
-      this.emit('system-notification', data)
-    })
-
-    // Eventos de configuración de negocio
-    this.socket.on('business-config-updated', (data) => {
-      this.emit('business-config-updated', data)
-    })
-  }
-
   // Desconectar WebSocket
   disconnect() {
     if (this.socket) {
-      this.socket.disconnect()
+      this.socket.close()
       this.socket = null
       this.connected = false
       this.listeners.clear()
@@ -100,7 +70,8 @@ class WebSocketService {
   // Enviar mensaje al servidor
   send(event, data) {
     if (this.socket && this.connected) {
-      this.socket.emit(event, data)
+      const message = JSON.stringify({ event, data })
+      this.socket.send(message)
     } else {
       console.warn('⚠️ WebSocket no conectado, no se puede enviar:', event)
     }

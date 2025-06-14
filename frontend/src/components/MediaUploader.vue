@@ -451,9 +451,9 @@ export default {
 .upload-zone {
   position: relative;
   min-height: 200px;
-  border: 2px dashed var(--border, #e0e0e0);
+  border: 2px dashed var(--border);
   border-radius: 16px;
-  background: var(--surface, #ffffff);
+  background: var(--surface);
   transition: all 0.3s ease;
   cursor: pointer;
   display: flex;
@@ -464,29 +464,29 @@ export default {
 }
 
 .upload-zone:hover {
-  border-color: var(--primary, #1976d2);
-  background: rgba(var(--primary-rgb, 25, 118, 210), 0.02);
+  border-color: var(--primary);
+  background: rgba(var(--primary-rgb), 0.02);
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(var(--primary-rgb, 25, 118, 210), 0.15);
+  box-shadow: 0 8px 25px rgba(var(--primary-rgb), 0.15);
 }
 
 .upload-zone.drag-over {
-  border-color: var(--primary, #1976d2);
-  background: rgba(var(--primary-rgb, 25, 118, 210), 0.08);
+  border-color: var(--primary);
+  background: rgba(var(--primary-rgb), 0.08);
   border-style: solid;
-  box-shadow: 0 0 20px rgba(var(--primary-rgb, 25, 118, 210), 0.2);
+  box-shadow: 0 0 20px rgba(var(--primary-rgb), 0.2);
 }
 
 .upload-zone.has-file {
   border-style: solid;
-  border-color: var(--positive, #21ba45);
-  background: rgba(var(--positive-rgb, 33, 186, 69), 0.02);
+  border-color: var(--positive);
+  background: rgba(var(--positive-rgb), 0.02);
   min-height: 160px;
 }
 
 .upload-zone.uploading {
-  border-color: var(--warning, #f2c037);
-  background: rgba(var(--warning-rgb, 242, 192, 55), 0.02);
+  border-color: var(--warning);
+  background: rgba(var(--warning-rgb), 0.02);
   cursor: not-allowed;
 }
 
@@ -502,19 +502,19 @@ export default {
 
 .upload-icon {
   margin-bottom: 16px;
-  color: var(--text-secondary, #666);
+  color: var(--text-secondary);
 }
 
 .upload-prompt h4 {
   margin: 0 0 8px 0;
   font-size: 1.2rem;
   font-weight: 600;
-  color: var(--text-primary, #333);
+  color: var(--text-primary);
 }
 
 .upload-prompt p {
   margin: 0 0 20px 0;
-  color: var(--text-secondary, #666);
+  color: var(--text-secondary);
   font-size: 0.95rem;
 }
 
@@ -528,7 +528,7 @@ export default {
 
 .size-limit {
   font-size: 0.85rem;
-  color: var(--text-secondary, #666);
+  color: var(--text-secondary);
 }
 
 /* Archivo seleccionado */
@@ -547,7 +547,7 @@ export default {
   height: 80px;
   border-radius: 12px;
   overflow: hidden;
-  background: var(--background, #f5f5f5);
+  background: var(--background);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -561,7 +561,7 @@ export default {
 }
 
 .file-icon {
-  color: var(--text-secondary, #666);
+  color: var(--text-secondary);
 }
 
 .file-details {
@@ -573,7 +573,7 @@ export default {
   margin: 0 0 8px 0;
   font-size: 1.1rem;
   font-weight: 600;
-  color: var(--text-primary, #333);
+  color: var(--text-primary);
   word-break: break-word;
 }
 
@@ -586,7 +586,7 @@ export default {
 
 .file-size {
   font-size: 0.9rem;
-  color: var(--text-secondary, #666);
+  color: var(--text-secondary);
 }
 
 .remove-file {
@@ -617,26 +617,26 @@ export default {
   transform: translate(-50%, -50%);
   font-weight: 600;
   font-size: 0.9rem;
-  color: var(--text-primary, #333);
+  color: var(--text-primary);
 }
 
 .upload-progress h4 {
   margin: 0 0 8px 0;
   font-size: 1.1rem;
   font-weight: 600;
-  color: var(--text-primary, #333);
+  color: var(--text-primary);
 }
 
 .upload-progress p {
   margin: 0;
-  color: var(--text-secondary, #666);
+  color: var(--text-secondary);
   font-size: 0.9rem;
 }
 
 /* Formulario de metadatos */
 .metadata-form {
-  background: var(--surface, #ffffff);
-  border: 1px solid var(--border, #e0e0e0);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 16px;
   overflow: hidden;
   margin-bottom: 24px;
@@ -644,14 +644,14 @@ export default {
 
 .form-section {
   padding: 24px;
-  border-bottom: 1px solid var(--border, #e0e0e0);
+  border-bottom: 1px solid var(--border);
 }
 
 .form-section h5 {
   margin: 0 0 20px 0;
   font-size: 1.1rem;
   font-weight: 600;
-  color: var(--text-primary, #333);
+  color: var(--text-primary);
 }
 
 .form-grid {
@@ -668,7 +668,7 @@ export default {
   display: flex;
   gap: 12px;
   justify-content: flex-end;
-  background: rgba(var(--border-rgb, 224, 224, 224), 0.1);
+  background: var(--background);
 }
 
 .cancel-btn {
@@ -694,13 +694,61 @@ export default {
   margin: 16px 0 8px 0;
   font-size: 1.2rem;
   font-weight: 600;
-  color: var(--positive, #21ba45);
+  color: var(--positive);
 }
 
 .success-message p {
   margin: 0;
-  color: var(--text-secondary, #666);
+  color: var(--text-secondary);
   font-size: 0.95rem;
+}
+
+/* Estilos para inputs del formulario */
+.form-grid .q-field :deep(.q-field__control) {
+  background: var(--background);
+  border-color: var(--border);
+}
+
+.form-grid .q-field :deep(.q-field__native) {
+  color: var(--text-primary) !important;
+}
+
+.form-grid .q-field :deep(.q-field__label) {
+  color: var(--text-secondary) !important;
+}
+
+.form-grid .q-field :deep(.q-field__control.q-field__control--focused .q-field__label) {
+  color: var(--primary) !important;
+}
+
+.form-grid .q-field :deep(.q-field__prepend) {
+  color: var(--primary);
+}
+
+.form-grid .q-field :deep(.q-field__append) {
+  color: var(--text-secondary);
+}
+
+.form-grid .q-field :deep(.q-field__hint) {
+  color: var(--text-secondary) !important;
+}
+
+/* Asegurar que los selects también sean legibles */
+.form-grid .q-select :deep(.q-field__native span) {
+  color: var(--text-primary) !important;
+}
+
+.form-grid .q-select :deep(.q-field__control) {
+  background: var(--background) !important;
+}
+
+/* Dropdown del select */
+.q-menu :deep(.q-item) {
+  color: var(--text-primary) !important;
+}
+
+.q-menu :deep(.q-item__label) {
+  color: var(--text-primary) !important;
 }
 
 /* Responsive */
@@ -745,24 +793,24 @@ export default {
 
 /* Dark mode */
 .body--dark .upload-zone {
-  border-color: rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.02);
+  border-color: var(--border);
+  background: var(--surface);
 }
 
 .body--dark .upload-zone:hover {
-  background: rgba(var(--primary-rgb, 25, 118, 210), 0.05);
+  background: rgba(var(--primary-rgb), 0.05);
 }
 
 .body--dark .metadata-form {
-  background: rgba(255, 255, 255, 0.02);
-  border-color: rgba(255, 255, 255, 0.12);
+  background: var(--surface);
+  border-color: var(--border);
 }
 
 .body--dark .form-section {
-  border-color: rgba(255, 255, 255, 0.12);
+  border-color: var(--border);
 }
 
 .body--dark .form-actions {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--background);
 }
 </style>

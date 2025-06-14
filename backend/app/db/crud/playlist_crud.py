@@ -84,43 +84,85 @@ def get_playlist_stats(db: Session) -> PlaylistStats:
         )
 
 
+def add_single_media_to_playlist(db: Session, playlist_id: int, media_id: int, duration: Optional[int] = None) -> bool:
+    """Add a single media to playlist with optional custom duration"""
+    try:
+        # Verificar que la playlist existe
+        playlist = db.query(Playlist).filter(Playlist.id == playlist_id).first()
+        if not playlist:
+            return False
+        
+        # Verificar que el media existe
+        media = db.query(Media).filter(Media.id == media_id).first()
+        if not media:
+            return False
+        
+        # Verificar que no existe ya la relación
+        existing = db.query(PlaylistMedia).filter(
+            PlaylistMedia.playlist_id == playlist_id,
+            PlaylistMedia.media_id == media_id
+        ).first()
+        if existing:
+            return False
+        
+        # Obtener el siguiente order_index
+        max_order = db.query(func.max(PlaylistMedia.order_index))\
+            .filter(PlaylistMedia.playlist_id == playlist_id).scalar()
+        order_index = (max_order + 1) if max_order is not None else 0
+        
+        # Crear la relación
+        playlist_media = PlaylistMedia(
+            playlist_id=playlist_id,
+            media_id=media_id,
+            order_index=order_index,
+            duration=duration
+        )
+        db.add(playlist_media)
+        db.commit()
+        return True
+    except Exception as e:
+        print(f"Error adding single media to playlist: {e}")
+        db.rollback()
+        return False
+
+
 def add_media_to_playlist(db: Session, request: PlaylistAddMediaRequest) -> bool:
-    """Add media to playlist"""
+    """Add multiple media to playlist"""
     try:
         # Verificar que la playlist existe
         playlist = db.query(Playlist).filter(Playlist.id == request.playlist_id).first()
         if not playlist:
             return False
         
-        # Verificar que el media existe
-        media = db.query(Media).filter(Media.id == request.media_id).first()
-        if not media:
-            return False
+        # Obtener el order_index inicial
+        max_order = db.query(func.max(PlaylistMedia.order_index))\
+            .filter(PlaylistMedia.playlist_id == request.playlist_id).scalar()
+        next_order = (max_order + 1) if max_order is not None else 0
         
-        # Verificar que no existe ya la relación
-        existing = db.query(PlaylistMedia).filter(
-            PlaylistMedia.playlist_id == request.playlist_id,
-            PlaylistMedia.media_id == request.media_id
-        ).first()
-        if existing:
-            return False
+        # Agregar cada medio
+        for media_id in request.media_ids:
+            # Verificar que el media existe
+            media = db.query(Media).filter(Media.id == media_id).first()
+            if not media:
+                continue
+            
+            # Verificar que no existe ya la relación
+            existing = db.query(PlaylistMedia).filter(
+                PlaylistMedia.playlist_id == request.playlist_id,
+                PlaylistMedia.media_id == media_id
+            ).first()
+            if existing:
+                continue
+            
+            # Crear la relación
+            playlist_media = PlaylistMedia(
+                playlist_id=request.playlist_id,
+                media_id=media_id,
+                order_index=next_order
+            )
+            db.add(playlist_media)
+            next_order += 1
         
-        # Determinar el order_index
-        if request.order_index is not None:
-            order_index = request.order_index
-        else:
-            # Obtener el siguiente order_index
-            max_order = db.query(func.max(PlaylistMedia.order_index))\
-                .filter(PlaylistMedia.playlist_id == request.playlist_id).scalar()
-            order_index = (max_order + 1) if max_order is not None else 0
-        
-        # Crear la relación
-        playlist_media = PlaylistMedia(
-            playlist_id=request.playlist_id,
-            media_id=request.media_id,
-            order_index=order_index
-        )
-        db.add(playlist_media)
         db.commit()
         return True
     except Exception as e:
@@ -149,8 +191,26 @@ def remove_media_from_playlist(db: Session, playlist_id: int, media_id: int) -> 
         return False
 
 
-def reorder_playlist_media(db: Session, request: PlaylistReorderRequest) -> bool:
+def reorder_playlist_media(db: Session, playlist_id: int, media_order: List[dict]) -> bool:
     """Reorder media in playlist"""
+    try:
+        # Actualizar el order_index de cada media en la playlist
+        for order_item in media_order:
+            db.query(PlaylistMedia).filter(
+                PlaylistMedia.playlist_id == playlist_id,
+                PlaylistMedia.media_id == order_item['media_id']
+            ).update({"order_index": order_item['order_index']})
+        
+        db.commit()
+        return True
+    except Exception as e:
+        print(f"Error reordering playlist media: {e}")
+        db.rollback()
+        return False
+
+
+def reorder_playlist_media_with_request(db: Session, request: PlaylistReorderRequest) -> bool:
+    """Reorder media in playlist using request object"""
     try:
         # Actualizar el order_index de cada media en la playlist
         for media_order in request.media_order:
@@ -173,3 +233,33 @@ def get_playlist_media(db: Session, playlist_id: int) -> List[PlaylistMedia]:
         .options(selectinload(PlaylistMedia.media))\
         .filter(PlaylistMedia.playlist_id == playlist_id)\
         .order_by(PlaylistMedia.order_index).all()
+
+
+def get_playlist_media_relation(db: Session, playlist_id: int, media_id: int) -> Optional[PlaylistMedia]:
+    """Get the PlaylistMedia relation between a playlist and media"""
+    return db.query(PlaylistMedia)\
+        .filter(
+            PlaylistMedia.playlist_id == playlist_id,
+            PlaylistMedia.media_id == media_id
+        ).first()
+
+
+def update_media_duration_in_playlist(db: Session, playlist_id: int, media_id: int, duration: Optional[float]) -> bool:
+    """Update the duration of a specific media in a playlist"""
+    try:
+        playlist_media = db.query(PlaylistMedia)\
+            .filter(
+                PlaylistMedia.playlist_id == playlist_id,
+                PlaylistMedia.media_id == media_id
+            ).first()
+        
+        if not playlist_media:
+            return False
+        
+        playlist_media.duration = duration
+        db.commit()
+        return True
+    except Exception as e:
+        print(f"Error updating media duration in playlist: {e}")
+        db.rollback()
+        return False
