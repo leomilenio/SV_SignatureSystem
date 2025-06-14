@@ -191,26 +191,8 @@ def remove_media_from_playlist(db: Session, playlist_id: int, media_id: int) -> 
         return False
 
 
-def reorder_playlist_media(db: Session, playlist_id: int, media_order: List[dict]) -> bool:
+def reorder_playlist_media(db: Session, request: PlaylistReorderRequest) -> bool:
     """Reorder media in playlist"""
-    try:
-        # Actualizar el order_index de cada media en la playlist
-        for order_item in media_order:
-            db.query(PlaylistMedia).filter(
-                PlaylistMedia.playlist_id == playlist_id,
-                PlaylistMedia.media_id == order_item['media_id']
-            ).update({"order_index": order_item['order_index']})
-        
-        db.commit()
-        return True
-    except Exception as e:
-        print(f"Error reordering playlist media: {e}")
-        db.rollback()
-        return False
-
-
-def reorder_playlist_media_with_request(db: Session, request: PlaylistReorderRequest) -> bool:
-    """Reorder media in playlist using request object"""
     try:
         # Actualizar el order_index de cada media en la playlist
         for media_order in request.media_order:
@@ -244,22 +226,17 @@ def get_playlist_media_relation(db: Session, playlist_id: int, media_id: int) ->
         ).first()
 
 
-def update_media_duration_in_playlist(db: Session, playlist_id: int, media_id: int, duration: Optional[float]) -> bool:
+def update_media_duration_in_playlist(db: Session, playlist_id: int, media_id: int, duration: int) -> bool:
     """Update the duration of a specific media in a playlist"""
-    try:
-        playlist_media = db.query(PlaylistMedia)\
-            .filter(
-                PlaylistMedia.playlist_id == playlist_id,
-                PlaylistMedia.media_id == media_id
-            ).first()
-        
-        if not playlist_media:
-            return False
-        
-        playlist_media.duration = duration
-        db.commit()
-        return True
-    except Exception as e:
-        print(f"Error updating media duration in playlist: {e}")
-        db.rollback()
+    playlist_media = db.query(PlaylistMedia)\
+        .filter(
+            PlaylistMedia.playlist_id == playlist_id,
+            PlaylistMedia.media_id == media_id
+        ).first()
+    
+    if not playlist_media:
         return False
+    
+    playlist_media.duration = duration
+    db.commit()
+    return True

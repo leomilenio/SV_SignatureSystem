@@ -291,8 +291,8 @@ export const playlistAPI = {
   // Listar todas las playlists
   list: (skip = 0, limit = 100) => httpMethods.get(`/playlists/?skip=${skip}&limit=${limit}`),
   
-  // Obtener playlist específica con sus medios
-  getById: (playlistId) => httpMethods.get(`/playlists/${playlistId}`),
+  // Obtener playlist específica
+  get: (playlistId) => httpMethods.get(`/playlists/${playlistId}`),
   
   // Obtener estadísticas de playlists
   getStats: () => httpMethods.get('/playlists/stats'),
@@ -310,13 +310,13 @@ export const playlistAPI = {
   addMedia: (playlistId, mediaIds) => httpMethods.post(`/playlists/${playlistId}/media`, { media_ids: mediaIds }),
   
   // Agregar un solo medio a playlist
-  addMedia: (playlistId, mediaData) => httpMethods.post(`/playlists/${playlistId}/media`, mediaData),
+  addSingleMedia: (playlistId, mediaData) => httpMethods.post(`/playlists/${playlistId}/media`, mediaData),
   
   // Quitar medio de playlist
   removeMedia: (playlistId, mediaId) => httpMethods.delete(`/playlists/${playlistId}/media/${mediaId}`),
   
-  // Actualizar duración de medio en playlist
-  updateMediaDuration: (playlistId, mediaId, updateData) => httpMethods.put(`/playlists/${playlistId}/media/${mediaId}`, updateData),
+  // Actualizar medio en playlist (duración, orden, etc.)
+  updateMedia: (playlistId, mediaId, updateData) => httpMethods.put(`/playlists/${playlistId}/media/${mediaId}`, updateData),
   
   // Reordenar medios en playlist
   reorder: (playlistId, mediaOrders) => httpMethods.put(`/playlists/${playlistId}/reorder`, { media_orders: mediaOrders }),
