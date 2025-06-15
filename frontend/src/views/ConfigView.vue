@@ -141,7 +141,7 @@
         <div class="footer-section">
           <div class="diversity-message">
             <q-icon name="favorite" class="heart-icon" />
-            <span>Construyendo espacios inclusivos para toda la comunidad</span>
+            <span>Programado por un gei 🏳️‍🌈</span>
           </div>
         </div>
       </div>

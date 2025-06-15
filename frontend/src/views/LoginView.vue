@@ -15,7 +15,7 @@
             </div>
             <h2 class="app-title">Pochtecayotl</h2>
             <h3 class="app-subtitle-main">Signance System</h3>
-            <p class="app-subtitle">Sistema de Gestión de Contenido Digital LGBT+</p>
+            <p class="app-subtitle">Sistema de Gestión de Anuncios Digitales</p>
             <div class="pride-divider"></div>
           </div>
         </q-card-section>

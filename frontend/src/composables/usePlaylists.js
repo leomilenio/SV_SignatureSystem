@@ -1,5 +1,5 @@
 import { ref, reactive } from 'vue'
-import { playlistAPI } from '../services/api'
+import { playlistAPI, mediaAPI } from '../services/api'
 import { useToast } from 'vue-toastification'
 
 export function usePlaylists() {
@@ -22,9 +22,14 @@ export function usePlaylists() {
 
   const loadStats = async () => {
     try {
-      const { data } = await playlistAPI.getStats()
-      stats.totalPlaylists = data.total_playlists
-      stats.totalScheduledItems = data.total_scheduled_items
+      const [playlistStatsResponse, mediaResponse] = await Promise.all([
+        playlistAPI.getStats(),
+        mediaAPI.list()
+      ])
+      
+      stats.totalPlaylists = playlistStatsResponse.data.total_playlists
+      stats.totalScheduledItems = playlistStatsResponse.data.total_scheduled_items
+      stats.totalMedia = mediaResponse.data.length
     } catch (error) {
       toast.error('Error cargando estadísticas')
     }
