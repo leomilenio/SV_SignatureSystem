@@ -151,15 +151,52 @@ def delete_media(
     current_user: User = Depends(get_current_user),
     background_tasks: BackgroundTasks = BackgroundTasks()
 ):
-    """Delete media file"""
-    success = media_crud.delete_media(db, media_id=media_id)
-    if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Media not found"
+    """Delete media file and associated database record"""
+    try:
+        # Primero obtener información del media antes de eliminarlo
+        media_info = media_crud.get_media(db, media_id)
+        if not media_info:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Media not found"
+            )
+        
+        # Eliminar el media (esto incluye el archivo físico y las relaciones)
+        success = media_crud.delete_media(db, media_id=media_id)
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to delete media"
+            )
+        
+        # Notificar a través de WebSocket
+        background_tasks.add_task(
+            broadcast_event, 
+            "media_deleted", 
+            {
+                "id": media_id,
+                "filename": media_info.filename,
+                "message": f"Media '{media_info.filename}' has been deleted successfully"
+            }
         )
-    background_tasks.add_task(broadcast_event, "media_deleted", {"id": media_id})
-    return {"message": "Media deleted successfully"}
+        
+        return {
+            "message": "Media deleted successfully",
+            "deleted_media": {
+                "id": media_id,
+                "filename": media_info.filename
+            }
+        }
+        
+    except HTTPException:
+        # Re-raise HTTPException as is
+        raise
+    except Exception as e:
+        print(f"❌ Error deleting media {media_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal server error while deleting media: {str(e)}"
+        )
 
 
 @router.get("/{media_id}/playlists")

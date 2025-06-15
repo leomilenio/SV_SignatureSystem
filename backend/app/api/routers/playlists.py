@@ -268,3 +268,69 @@ async def remove_media_from_playlist(
     })
     
     return {"message": "Media removed from playlist successfully"}
+
+
+@router.put("/{playlist_id}/media/{media_id}")
+async def update_media_in_playlist(
+    playlist_id: int,
+    media_id: int,
+    update_data: dict,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Update media duration in playlist"""
+    from pydantic import BaseModel
+    
+    # Extraer la duración del JSON
+    duration = update_data.get('duration')
+    if duration is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Duration is required"
+        )
+    
+    # Validar que la duración esté en un rango válido
+    if duration < 1 or duration > 3600:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Duration must be between 1 and 3600 seconds"
+        )
+    
+    # Verificar que el media no sea un video (los videos tienen duración fija)
+    from app.db.crud import media_crud
+    media = media_crud.get_media(db, media_id)
+    if not media:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Media not found"
+        )
+    
+    if media.media_type == 'video':
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot modify duration of video files"
+        )
+    
+    crud = get_playlist_crud()
+    success = crud.update_media_duration_in_playlist(db, playlist_id, media_id, duration)
+    
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Media not found in playlist"
+        )
+    
+    # Notificar actualización de playlist vía WebSocket
+    background_tasks.add_task(broadcast_event, "playlist_updated", {
+        "playlist_id": playlist_id,
+        "action": "media_duration_updated",
+        "media_id": media_id,
+        "new_duration": duration
+    })
+    
+    return {
+        "message": "Media duration updated successfully",
+        "media_id": media_id,
+        "new_duration": duration
+    }

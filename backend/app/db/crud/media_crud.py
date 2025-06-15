@@ -79,7 +79,7 @@ def update_media(db: Session, media_id: int, media_update: MediaUpdate) -> Optio
 
 
 def delete_media(db: Session, media_id: int) -> bool:
-    """Delete media record"""
+    """Delete media record and associated file"""
     db_media = get_media(db, media_id)
     if not db_media:
         return False
@@ -89,15 +89,51 @@ def delete_media(db: Session, media_id: int) -> bool:
     schedules_with_media = db.query(Schedule).filter(Schedule.media_id == media_id).all()
     
     for schedule in schedules_with_media:
-        # Opción 1: Eliminar el schedule completo
+        # Eliminar el schedule completo ya que el media asociado será eliminado
         db.delete(schedule)
-        # Opción 2: Alternativamente, podrías poner media_id = NULL si cambias el modelo
     
-    # Eliminar archivo físico
-    if os.path.exists(db_media.filepath):
-        os.remove(db_media.filepath)
+    # Eliminar relaciones en playlist_media
+    from app.db.models.playlist_media import PlaylistMedia
+    playlist_media_relations = db.query(PlaylistMedia).filter(PlaylistMedia.media_id == media_id).all()
+    for relation in playlist_media_relations:
+        db.delete(relation)
     
-    # Ahora eliminar el media
+    # Construir la ruta completa del archivo para eliminarlo
+    # db_media.filepath es algo como "/uploads/filename.ext"
+    # Necesitamos construir la ruta completa del sistema de archivos
+    if db_media.filepath:
+        # Extraer solo el nombre del archivo de la ruta
+        filename_only = os.path.basename(db_media.filepath)
+        # Construir la ruta completa usando UPLOAD_DIR
+        full_file_path = os.path.join(settings.UPLOAD_DIR, filename_only)
+        
+        # Eliminar archivo físico si existe
+        if os.path.exists(full_file_path):
+            try:
+                os.remove(full_file_path)
+                print(f"✅ Archivo eliminado: {full_file_path}")
+            except Exception as e:
+                print(f"⚠️  Error eliminando archivo {full_file_path}: {e}")
+        else:
+            print(f"⚠️  Archivo no encontrado para eliminar: {full_file_path}")
+        
+        # También eliminar thumbnail si es un video (patrón: filename_thumb.jpg)
+        if db_media.media_type == 'video':
+            # Extraer nombre base sin extensión
+            base_name = os.path.splitext(filename_only)[0]
+            thumbnail_filename = f"{base_name}_thumb.jpg"
+            thumbnail_path = os.path.join(settings.UPLOAD_DIR, thumbnail_filename)
+            
+            if os.path.exists(thumbnail_path):
+                try:
+                    os.remove(thumbnail_path)
+                    print(f"✅ Thumbnail eliminado: {thumbnail_path}")
+                except Exception as e:
+                    print(f"⚠️  Error eliminando thumbnail {thumbnail_path}: {e}")
+            else:
+                print(f"⚠️  Thumbnail no encontrado: {thumbnail_path}")
+    
+    # Finalmente eliminar el registro de media
     db.delete(db_media)
     db.commit()
     return True
