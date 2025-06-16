@@ -53,6 +53,36 @@ def list_playlists(
     ]
 
 
+@router.get("/public", response_model=List[dict])
+def list_playlists_public(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db)
+):
+    """List all playlists (public endpoint for player)"""
+    crud = get_playlist_crud()
+    playlists = crud.list_playlists(db, skip=skip, limit=limit)
+    
+    # Convertir a dict para evitar problemas de serialización
+    return [
+        {
+            "id": p.id,
+            "name": p.name,
+            "description": p.description,
+            "created_at": p.created_at.isoformat() if p.created_at else None,
+            "updated_at": p.updated_at.isoformat() if p.updated_at else None,
+            # contar medios asociados a la playlist
+            "media_count": len(p.playlist_media) if hasattr(p, 'playlist_media') else 0,
+            # duración total de la playlist (suma de duraciones efectivas)
+            "total_duration": sum(
+                (pm.duration if pm.duration is not None else pm.media.duration)
+                for pm in getattr(p, 'playlist_media', [])
+            )
+        }
+        for p in playlists
+    ]
+
+
 @router.get("/stats")
 def get_playlist_stats(
     db: Session = Depends(get_db),
@@ -333,4 +363,180 @@ async def update_media_in_playlist(
         "message": "Media duration updated successfully",
         "media_id": media_id,
         "new_duration": duration
+    }
+
+
+@router.get("/{playlist_id}/with-schedules")
+def get_playlist_with_schedules(
+    playlist_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get playlist with media schedules for admin (requires auth)"""
+    crud = get_playlist_crud()
+    
+    # Obtener la playlist
+    playlist = crud.get_playlist(db=db, playlist_id=playlist_id)
+    if not playlist:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Playlist not found"
+        )
+    
+    # Obtener medios con sus schedules
+    from app.db.models.schedule import Schedule
+    from app.db.models.media import Media
+    from app.db.models.playlist_media import PlaylistMedia
+    
+    playlist_medias = (
+        db.query(PlaylistMedia)
+        .filter(PlaylistMedia.playlist_id == playlist_id)
+        .order_by(PlaylistMedia.order_index)
+        .all()
+    )
+    
+    medias_with_schedules = []
+    for pm in playlist_medias:
+        # Obtener el media
+        media = db.query(Media).filter(Media.id == pm.media_id).first()
+        if not media:
+            continue
+            
+        # Buscar schedule activo para este media
+        schedule = (
+            db.query(Schedule)
+            .filter(
+                Schedule.media_id == media.id,
+                Schedule.is_active == True
+            )
+            .first()
+        )
+        
+        # Construir respuesta
+        media_data = {
+            "id": media.id,
+            "filename": media.filename,
+            "served_filename": media.served_filename,
+            "file_url": media.file_url,
+            "file_type": media.file_type,
+            "media_type": media.media_type,
+            "duration": pm.duration if pm.duration is not None else media.duration,
+            "order_index": pm.order_index,
+            "schedule": None
+        }
+        
+        if schedule:
+            media_data["schedule"] = {
+                "id": schedule.id,
+                "schedule_type": schedule.schedule_type,
+                "is_all_day": schedule.is_all_day,
+                "daily_start": schedule.daily_start,
+                "daily_end": schedule.daily_end,
+                "weekdays": schedule.weekdays,
+                "start_date": schedule.start_date.isoformat() if schedule.start_date else None,
+                "end_date": schedule.end_date.isoformat() if schedule.end_date else None,
+                "specific_times": schedule.specific_times,
+                "is_active": schedule.is_active,
+                "priority": schedule.priority
+            }
+        
+        medias_with_schedules.append(media_data)
+    
+    return {
+        "id": playlist.id,
+        "name": playlist.name,
+        "description": playlist.description,
+        "medias": medias_with_schedules,
+        "total_medias": len(medias_with_schedules),
+        "created_at": playlist.created_at.isoformat() if playlist.created_at else None
+    }
+
+
+@router.get("/{playlist_id}/player")
+def get_playlist_for_player(
+    playlist_id: int,
+    db: Session = Depends(get_db)
+):
+    """Get playlist with media schedules for player (public endpoint)"""
+    crud = get_playlist_crud()
+    
+    # Obtener la playlist
+    playlist = crud.get_playlist(db=db, playlist_id=playlist_id)
+    if not playlist:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Playlist not found"
+        )
+    
+    # Obtener medios con sus schedules
+    from app.db.models.schedule import Schedule
+    from app.db.models.media import Media
+    from app.db.models.playlist_media import PlaylistMedia
+    
+    playlist_medias = (
+        db.query(PlaylistMedia)
+        .filter(PlaylistMedia.playlist_id == playlist_id)
+        .order_by(PlaylistMedia.order_index)
+        .all()
+    )
+    
+    medias_with_schedules = []
+    for pm in playlist_medias:
+        # Obtener el media
+        media = db.query(Media).filter(Media.id == pm.media_id).first()
+        if not media:
+            continue
+            
+        # Buscar schedule activo para este media
+        schedule = (
+            db.query(Schedule)
+            .filter(
+                Schedule.media_id == media.id,
+                Schedule.is_active == True
+            )
+            .first()
+        )
+        
+        # Construir respuesta
+        # Crear URL correcta para servir archivos
+        import os
+        served_filename = os.path.basename(media.filepath)
+        file_url = f"/uploads/{served_filename}"
+            
+        media_data = {
+            "id": media.id,
+            "filename": media.filename,
+            "served_filename": served_filename,
+            "file_url": file_url,
+            "filepath": media.filepath,
+            "media_type": media.media_type,
+            "duration": pm.duration if pm.duration is not None else media.duration,
+            "order_index": pm.order_index,
+            "schedule": None
+        }
+        
+        if schedule:
+            media_data["schedule"] = {
+                "id": schedule.id,
+                "schedule_type": schedule.schedule_type,
+                "is_all_day": schedule.is_all_day,
+                "daily_start": schedule.daily_start,
+                "daily_end": schedule.daily_end,
+                "weekdays": schedule.weekdays,
+                "start_date": schedule.start_date.isoformat() if schedule.start_date else None,
+                "end_date": schedule.end_date.isoformat() if schedule.end_date else None,
+                "specific_times": schedule.specific_times,
+                "is_active": schedule.is_active,
+                "priority": schedule.priority
+            }
+        
+        medias_with_schedules.append(media_data)
+    
+    return {
+        "id": playlist.id,
+        "name": playlist.name,
+        "description": playlist.description,
+        "medias": medias_with_schedules,
+        "total_medias": len(medias_with_schedules),
+        "created_at": playlist.created_at.isoformat() if playlist.created_at else None
     }
