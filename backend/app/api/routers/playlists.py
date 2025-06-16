@@ -101,6 +101,7 @@ def get_playlist_stats(
 @router.post("/")
 def create_playlist(
     playlist_data: dict,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -110,6 +111,13 @@ def create_playlist(
     
     playlist_in = PlaylistCreate(**playlist_data)
     new_playlist = crud.create_playlist(db=db, playlist_in=playlist_in)
+    
+    # Emit WebSocket event
+    background_tasks.add_task(broadcast_event, "playlist_created", {
+        "playlist_id": new_playlist.id,
+        "playlist_name": new_playlist.name,
+        "action": "created"
+    })
     
     return {
         "id": new_playlist.id,
@@ -210,11 +218,22 @@ def update_playlist(
 @router.delete("/{playlist_id}")
 def delete_playlist(
     playlist_id: int,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Delete playlist"""
     crud = get_playlist_crud()
+    
+    # Get playlist info before deletion
+    playlist = crud.get_playlist(db, playlist_id=playlist_id)
+    if not playlist:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Playlist not found"
+        )
+    
+    playlist_name = playlist.name
     success = crud.delete_playlist(db, playlist_id=playlist_id)
     
     if not success:
@@ -222,6 +241,13 @@ def delete_playlist(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Playlist not found"
         )
+    
+    # Emit WebSocket event
+    background_tasks.add_task(broadcast_event, "playlist_deleted", {
+        "playlist_id": playlist_id,
+        "playlist_name": playlist_name,
+        "action": "deleted"
+    })
     
     return {"message": "Playlist deleted successfully"}
 
