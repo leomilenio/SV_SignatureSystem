@@ -1,3 +1,5 @@
+import backendDetector from './backendDetector'
+
 class WebSocketService {
   constructor() {
     this.socket = null
@@ -6,11 +8,45 @@ class WebSocketService {
     this.reconnectAttempts = 0
     this.maxReconnectAttempts = 5
     this.reconnectDelay = 1000
+    this.detectedBackendUrl = null
+  }
+
+  /**
+   * Obtiene la URL del WebSocket basada en la detección del backend
+   * @returns {Promise<string>}
+   */
+  async getWebSocketUrl() {
+    try {
+      // Usar el backend ya detectado o detectar uno nuevo
+      let backendUrl = this.detectedBackendUrl
+      
+      if (!backendUrl) {
+        const { baseUrl } = await backendDetector.detectBackend()
+        this.detectedBackendUrl = baseUrl
+        backendUrl = baseUrl
+      }
+      
+      // Convertir HTTP a WebSocket URL
+      const wsUrl = backendUrl.replace('http://', 'ws://') + '/ws'
+      console.log(`🎯 URL WebSocket generada: ${wsUrl}`)
+      return wsUrl
+    } catch (error) {
+      console.error('❌ Error obteniendo URL del WebSocket:', error)
+      // Fallback a localhost
+      return 'ws://127.0.0.1:8002/ws'
+    }
   }
 
   // Conectar al WebSocket del servidor
-  connect(serverUrl = 'ws://127.0.0.1:8002/ws') {
+  async connect(serverUrl = null) {
     try {
+      // Si no se proporciona URL, obtener automáticamente
+      if (!serverUrl) {
+        serverUrl = await this.getWebSocketUrl()
+      }
+      
+      console.log(`🔌 Conectando WebSocket a: ${serverUrl}`)
+      
       // Crear conexión WebSocket nativa
       this.socket = new WebSocket(serverUrl)
 

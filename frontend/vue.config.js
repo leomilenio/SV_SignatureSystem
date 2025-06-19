@@ -6,7 +6,11 @@ module.exports = defineConfig({
   lintOnSave: false, // Deshabilitar ESLint durante el desarrollo
   devServer: {
     port: 8080,
-    host: 'localhost'
+    host: '0.0.0.0', // Permitir acceso desde cualquier IP de la red local
+    allowedHosts: 'all', // Permitir todos los hosts
+    client: {
+      webSocketURL: 'auto://0.0.0.0:0/ws' // Auto-detectar WebSocket URL
+    }
   },
   configureWebpack: {
     plugins: [
