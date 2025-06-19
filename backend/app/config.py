@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     
-    # CORS
+    # CORS - Permitir acceso desde cualquier IP de la red local
     ALLOWED_ORIGINS: List[str] = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
@@ -24,8 +24,12 @@ class Settings(BaseSettings):
         "http://127.0.0.1:8080",
         "http://localhost:8002",
         "http://127.0.0.1:8002",
-        "*"  # Permite todos los orígenes temporalmente para debug
+        "*"  # Permite todos los orígenes para acceso desde red local
     ]
+    
+    # Network configuration
+    HOST: str = "0.0.0.0"  # Escuchar en todas las interfaces de red
+    PORT: int = 8002
     
     # Media
     UPLOAD_DIR: str = "media/uploads"
