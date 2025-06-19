@@ -27,8 +27,8 @@ class Settings(BaseSettings):
         "*"  # Permite todos los orígenes para acceso desde red local
     ]
     
-    # Network configuration
-    HOST: str = "0.0.0.0"  # Escuchar en todas las interfaces de red
+    # Network configuration - FORZAR ESCUCHA EN TODAS LAS INTERFACES
+    HOST: str = "0.0.0.0"  # Escuchar en todas las interfaces de red (OBLIGATORIO para acceso remoto)
     PORT: int = 8002
     
     # Media

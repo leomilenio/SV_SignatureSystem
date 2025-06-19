@@ -4,13 +4,19 @@
  * Soporta detección tanto en localhost como en la IP de red local
  */
 
+import { NETWORK_CONFIG, getLocalNetworkIPs } from '@/config/network'
+
 class BackendDetector {
   constructor() {
     this.detectedPort = null
     this.detectedBaseUrl = null
-    this.portRange = { start: 8000, end: 8010 }
+    this.portRange = NETWORK_CONFIG.PORT_RANGE
     this.testEndpoint = '/health' // Endpoint simple para verificar conectividad
     this.currentHost = this.getCurrentHost()
+    
+    // Configuración prioritaria del servidor backend
+    this.backendServerIP = NETWORK_CONFIG.BACKEND_SERVER_IP
+    this.backendServerPort = NETWORK_CONFIG.BACKEND_PORT
   }
 
   /**
@@ -35,34 +41,8 @@ class BackendDetector {
    * @returns {string[]}
    */
   getCandidateHosts() {
-    const currentHost = window.location.hostname
-    const hosts = []
-    
-    // Siempre probar la IP fija del servidor backend primero
-    hosts.push('10.0.1.76') // IP del servidor donde siempre estará el backend
-    
-    // Luego probar el host actual
-    if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
-      hosts.push('127.0.0.1', 'localhost')
-    } else {
-      hosts.push(currentHost)
-    }
-    
-    // Si estamos accediendo desde una IP de red, también probar localhost
-    // por si el backend está corriendo en la misma máquina
-    if (currentHost !== 'localhost' && currentHost !== '127.0.0.1') {
-      // Intentar obtener las IPs comunes de la misma red
-      const ipParts = currentHost.split('.')
-      if (ipParts.length === 4) {
-        // Probar algunas IPs comunes de la misma red (servidor típico)
-        const baseNetwork = `${ipParts[0]}.${ipParts[1]}.${ipParts[2]}`
-        hosts.push(`${baseNetwork}.1`) // Gateway común
-        hosts.push(`${baseNetwork}.100`) // IP común para servidores
-        hosts.push(`${baseNetwork}.10`) // IP común para servidores
-      }
-    }
-    
-    return [...new Set(hosts)] // Eliminar duplicados
+    // Usar la función centralizada para obtener IPs
+    return getLocalNetworkIPs()
   }
 
   /**
@@ -71,6 +51,24 @@ class BackendDetector {
    */
   async detectBackend() {
     console.log('🔍 Iniciando detección automática del backend...')
+    
+    // PRIMERA PRIORIDAD: Probar la configuración conocida del servidor backend
+    console.log(`⚡ Probando configuración prioritaria: ${this.backendServerIP}:${this.backendServerPort}`)
+    if (await this.testSpecificHostPort(this.backendServerIP, this.backendServerPort)) {
+      this.detectedPort = this.backendServerPort
+      this.detectedBaseUrl = `http://${this.backendServerIP}:${this.backendServerPort}`
+      console.log(`✅ Backend confirmado en configuración prioritaria: ${this.detectedBaseUrl}`)
+      
+      // Guardar en localStorage
+      localStorage.setItem('signance_backend_port', this.backendServerPort.toString())
+      localStorage.setItem('signance_backend_url', this.detectedBaseUrl)
+      localStorage.setItem('signance_backend_host', this.backendServerIP)
+      
+      return {
+        port: this.detectedPort,
+        baseUrl: this.detectedBaseUrl
+      }
+    }
     
     // Si ya detectamos un puerto previamente, intentar usarlo primero
     if (this.detectedPort && this.detectedBaseUrl) {
