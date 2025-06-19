@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     
     # Network configuration - FORZAR ESCUCHA EN TODAS LAS INTERFACES
     HOST: str = "0.0.0.0"  # Escuchar en todas las interfaces de red (OBLIGATORIO para acceso remoto)
-    PORT: int = 8002
+    PORT: int = 8000  # Puerto preferido cambiado a 8000
     
     # Media
     UPLOAD_DIR: str = "media/uploads"

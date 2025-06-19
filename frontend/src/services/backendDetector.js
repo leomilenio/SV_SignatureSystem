@@ -1,22 +1,19 @@
 /**
  * Backend Auto-Detection Service
  * Detecta automáticamente en qué puerto está corriendo el backend FastAPI
- * Soporta detección tanto en localhost como en la IP de red local
+ * Soporta detección completamente dinámica sin hardcodear IPs
  */
 
-import { NETWORK_CONFIG, getLocalNetworkIPs } from '@/config/network'
+import { NETWORK_CONFIG, generateCandidateIPs } from '@/config/network'
 
 class BackendDetector {
   constructor() {
     this.detectedPort = null
     this.detectedBaseUrl = null
     this.portRange = NETWORK_CONFIG.PORT_RANGE
-    this.testEndpoint = '/health' // Endpoint simple para verificar conectividad
-    this.currentHost = this.getCurrentHost()
-    
-    // Configuración prioritaria del servidor backend
-    this.backendServerIP = NETWORK_CONFIG.BACKEND_SERVER_IP
-    this.backendServerPort = NETWORK_CONFIG.BACKEND_PORT
+    this.testEndpoint = NETWORK_CONFIG.HEALTH_ENDPOINT
+    this.preferredPort = NETWORK_CONFIG.BACKEND_PREFERRED_PORT
+    this.connectionTimeout = NETWORK_CONFIG.CONNECTION_TIMEOUT
   }
 
   /**
@@ -41,8 +38,8 @@ class BackendDetector {
    * @returns {string[]}
    */
   getCandidateHosts() {
-    // Usar la función centralizada para obtener IPs
-    return getLocalNetworkIPs()
+    // Usar la función centralizada para obtener IPs dinámicamente
+    return generateCandidateIPs()
   }
 
   /**
@@ -51,31 +48,15 @@ class BackendDetector {
    */
   async detectBackend() {
     console.log('🔍 Iniciando detección automática del backend...')
-    
-    // PRIMERA PRIORIDAD: Probar la configuración conocida del servidor backend
-    console.log(`⚡ Probando configuración prioritaria: ${this.backendServerIP}:${this.backendServerPort}`)
-    if (await this.testSpecificHostPort(this.backendServerIP, this.backendServerPort)) {
-      this.detectedPort = this.backendServerPort
-      this.detectedBaseUrl = `http://${this.backendServerIP}:${this.backendServerPort}`
-      console.log(`✅ Backend confirmado en configuración prioritaria: ${this.detectedBaseUrl}`)
-      
-      // Guardar en localStorage
-      localStorage.setItem('signance_backend_port', this.backendServerPort.toString())
-      localStorage.setItem('signance_backend_url', this.detectedBaseUrl)
-      localStorage.setItem('signance_backend_host', this.backendServerIP)
-      
-      return {
-        port: this.detectedPort,
-        baseUrl: this.detectedBaseUrl
-      }
-    }
+    console.log(`🎯 Puerto preferido: ${this.preferredPort}`)
+    console.log(`📊 Rango de puertos: ${this.portRange.start}-${this.portRange.end}`)
     
     // Si ya detectamos un puerto previamente, intentar usarlo primero
     if (this.detectedPort && this.detectedBaseUrl) {
       console.log(`⚡ Probando configuración previa: ${this.detectedBaseUrl}`)
       const host = new URL(this.detectedBaseUrl).hostname
       if (await this.testSpecificHostPort(host, this.detectedPort)) {
-        console.log(`✅ Backend confirmado en ${this.detectedBaseUrl}`)
+        console.log(`✅ Backend confirmado en configuración previa: ${this.detectedBaseUrl}`)
         return {
           port: this.detectedPort,
           baseUrl: this.detectedBaseUrl
@@ -89,26 +70,47 @@ class BackendDetector {
 
     // Obtener lista de hosts candidatos
     const candidateHosts = this.getCandidateHosts()
-    console.log(`🎯 Hosts candidatos: ${candidateHosts.join(', ')}`)
+    console.log(`🎯 ${candidateHosts.length} hosts candidatos detectados`)
 
-    // Buscar en el rango de puertos para cada host
+    // ESTRATEGIA DE BÚSQUEDA INTELIGENTE:
+    // 1. Primero probar el puerto preferido en todas las IPs
+    console.log(`🚀 FASE 1: Probando puerto preferido ${this.preferredPort} en todas las IPs...`)
+    for (const host of candidateHosts) {
+      console.log(`🔍 Probando ${host}:${this.preferredPort}`)
+      if (await this.testSpecificHostPort(host, this.preferredPort)) {
+        this.detectedPort = this.preferredPort
+        this.detectedBaseUrl = `http://${host}:${this.preferredPort}`
+        console.log(`✅ ¡Backend encontrado en puerto preferido! ${this.detectedBaseUrl}`)
+        
+        // Guardar en localStorage
+        this.saveToLocalStorage(host, this.preferredPort)
+        
+        return {
+          port: this.detectedPort,
+          baseUrl: this.detectedBaseUrl
+        }
+      }
+    }
+
+    // 2. Si no se encuentra en el puerto preferido, buscar en todo el rango
+    console.log(`🔍 FASE 2: Buscando en rango completo ${this.portRange.start}-${this.portRange.end}...`)
     for (const host of candidateHosts) {
       console.log(`🔍 Probando host: ${host}`)
       
       for (let port = this.portRange.start; port <= this.portRange.end; port++) {
+        // Saltar el puerto preferido ya que ya lo probamos
+        if (port === this.preferredPort) continue
+        
         console.log(`🔍 Probando puerto ${port} en ${host}...`)
         
         if (await this.testSpecificHostPort(host, port)) {
           this.detectedPort = port
           this.detectedBaseUrl = `http://${host}:${port}`
-          this.currentHost = host
           
           console.log(`✅ ¡Backend encontrado en ${this.detectedBaseUrl}!`)
           
-          // Guardar en localStorage para próximas sesiones
-          localStorage.setItem('signance_backend_port', port.toString())
-          localStorage.setItem('signance_backend_url', this.detectedBaseUrl)
-          localStorage.setItem('signance_backend_host', host)
+          // Guardar en localStorage
+          this.saveToLocalStorage(host, port)
           
           return {
             port: this.detectedPort,
@@ -242,6 +244,19 @@ class BackendDetector {
       clearInterval(this.healthCheckInterval)
       this.healthCheckInterval = null
     }
+  }
+
+  /**
+   * Guarda la configuración detectada en localStorage
+   * @param {string} host 
+   * @param {number} port 
+   */
+  saveToLocalStorage(host, port) {
+    const baseUrl = `http://${host}:${port}`
+    localStorage.setItem('signance_backend_port', port.toString())
+    localStorage.setItem('signance_backend_url', baseUrl)
+    localStorage.setItem('signance_backend_host', host)
+    console.log(`💾 Configuración guardada: ${baseUrl}`)
   }
 }
 
