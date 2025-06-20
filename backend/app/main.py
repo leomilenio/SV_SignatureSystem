@@ -21,12 +21,13 @@ async def lifespan(app: FastAPI):
     # Startup
     init_db()
     
-    # Create upload directory
-    os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
-    
     yield
     # Shutdown
     pass
+
+
+# Crear directorio de uploads ANTES de montar archivos estáticos
+os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
 
 
 app = FastAPI(
