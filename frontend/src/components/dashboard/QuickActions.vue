@@ -4,15 +4,19 @@
     <div class="actions-grid">
       <div class="action-button primary-action" @click="$router.push('/config')">
         <q-icon name="settings" size="2rem" />
-        <span>Configuración</span>
+        <span>Configuración del Negocio</span>
       </div>
       <div class="action-button secondary-action" @click="$router.push('/player')">
         <q-icon name="play_circle" size="2rem" />
         <span>Reproductor</span>
       </div>
-      <div class="action-button accent-action" @click="$router.push('/media')">
+      <div class="action-button accent-action" @click="navigateToMedia">
         <q-icon name="folder" size="2rem" />
         <span>Explorar Media</span>
+      </div>
+      <div class="action-button info-action" @click="navigateToAssistance">
+        <q-icon name="support_agent" size="2rem" />
+        <span>Asistencia</span>
       </div>
       <div class="action-button warning-action" @click="$emit('logout')">
         <q-icon name="logout" size="2rem" />
@@ -28,6 +32,16 @@ import { useRouter } from 'vue-router'
 const $router = useRouter()
 
 defineEmits(['logout'])
+
+// Función para navegar a media
+const navigateToMedia = () => {
+  $router.push('/media')
+}
+
+// Función para navegar a asistencia
+const navigateToAssistance = () => {
+  $router.push('/test-ok')
+}
 </script>
 
 <style scoped>
@@ -85,6 +99,15 @@ defineEmits(['logout'])
   background: linear-gradient(135deg, #3d9aec 0%, #00e0ec 100%);
 }
 
+.info-action {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.info-action:hover {
+  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+}
+
 .warning-action {
   background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
   color: white;
@@ -109,6 +132,10 @@ defineEmits(['logout'])
 
 .body--dark .accent-action {
   background: linear-gradient(135deg, #38b2ac 0%, #319795 100%);
+}
+
+.body--dark .info-action {
+  background: linear-gradient(135deg, #5a67d8 0%, #553c9a 100%);
 }
 
 .body--dark .warning-action {

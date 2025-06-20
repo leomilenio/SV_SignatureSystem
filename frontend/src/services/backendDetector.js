@@ -129,7 +129,15 @@ class BackendDetector {
    * @returns {Promise<boolean>}
    */
   async testPort(port) {
-    return await this.testSpecificHostPort(this.currentHost, port)
+    // Si tenemos una URL detectada, usar ese host
+    if (this.detectedBaseUrl) {
+      const host = new URL(this.detectedBaseUrl).hostname
+      return await this.testSpecificHostPort(host, port)
+    }
+    
+    // Si no, usar el host actual del navegador
+    const currentHost = window.location.hostname
+    return await this.testSpecificHostPort(currentHost, port)
   }
 
   /**
@@ -187,10 +195,11 @@ class BackendDetector {
     const port = localStorage.getItem('signance_backend_port')
     const baseUrl = localStorage.getItem('signance_backend_url')
     const cachedHost = localStorage.getItem('signance_backend_host')
+    const currentHost = window.location.hostname
     
     // Verificar si el host cambió (acceso desde diferente IP)
-    if (cachedHost && cachedHost !== this.currentHost) {
-      console.log(`🔄 Host cambió de ${cachedHost} a ${this.currentHost}, limpiando caché...`)
+    if (cachedHost && cachedHost !== currentHost) {
+      console.log(`🔄 Host cambió de ${cachedHost} a ${currentHost}, limpiando caché...`)
       this.clearCache()
       return null
     }
@@ -198,7 +207,7 @@ class BackendDetector {
     if (port && baseUrl) {
       return {
         port: parseInt(port),
-        baseUrl: baseUrl
+        baseUrl
       }
     }
     

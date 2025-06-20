@@ -38,12 +38,18 @@
         :media-files="mediaFiles"
         :backend-base-url="backendBaseUrl"
         :loading="mediaLoading"
+        mode="compact"
+        title="Archivos Multimedia"
+        subtitle="Archivos recientes"
+        :max-items="8"
         @refresh="loadMedia"
         @edit="editMedia"
         @delete="deleteMedia"
+        @show-all="navigateToMediaManager"
+        class="section-spacing"
       />
 
-      <QuickActions @logout="logout" />
+      <QuickActions @logout="logout" class="section-spacing" />
     </div>
 
     <PlaylistDialog
@@ -186,6 +192,7 @@ import { useTheme } from '../composables/useTheme'
 import { usePlaylists } from '../composables/usePlaylists'
 import { useMedia } from '../composables/useMedia'
 import { useSchedules } from '../composables/useSchedules'
+import { useMediaUrl } from '../composables/useMediaUrl'
 import backendDetector from '../services/backendDetector'
 import draggable from 'vuedraggable'
 
@@ -208,8 +215,8 @@ export default {
     const $q = useQuasar()
     const toast = useToast()
     const { isDarkMode } = useTheme()
+    const { backendBaseUrl } = useMediaUrl()
 
-    const backendBaseUrl = ref('http://127.0.0.1:8000')
     const playlistDialog = ref(false)
     const editMediaDialog = ref(false)
     const scheduleDialog = ref(false)
@@ -244,11 +251,6 @@ export default {
       { label: 'Sáb', value: 5 },
       { label: 'Dom', value: 6 }
     ]
-
-    const initializeBackend = async () => {
-      const backendInfo = await backendDetector.detectBackend()
-      backendBaseUrl.value = backendInfo.baseUrl
-    }
 
     const refreshData = async () => {
       await Promise.all([loadPlaylists(), loadMedia(), loadStats(), loadSchedules(), loadBusinessInfo()])
@@ -470,8 +472,11 @@ export default {
       return 'description'
     }
 
+    const navigateToMediaManager = () => {
+      router.push('/media')
+    }
+
     onMounted(async () => {
-      await initializeBackend()
       refreshData()
       $q.dark.set(isDarkMode.value)
     })
@@ -830,6 +835,27 @@ export default {
 .body--dark .available-media-list::-webkit-scrollbar-thumb:hover,
 .body--dark .playlist-media-list::-webkit-scrollbar-thumb:hover {
   background: #777;
+}
+
+/* Separación entre secciones */
+.section-spacing {
+  margin-bottom: 32px;
+}
+
+/* Espaciado especial para MediaGallery */
+.section-spacing + .section-spacing {
+  margin-top: 24px;
+}
+
+/* Responsive spacing */
+@media (max-width: 768px) {
+  .section-spacing {
+    margin-bottom: 24px;
+  }
+  
+  .section-spacing + .section-spacing {
+    margin-top: 16px;
+  }
 }
 </style>
 

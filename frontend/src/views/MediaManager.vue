@@ -1,530 +1,400 @@
 <template>
-  <div class="media-manager-container">
+  <div class="media-manager">
     <!-- Theme Toggle -->
     <ThemeToggle class="theme-toggle" />
     
-    <!-- Header -->
-    <div class="media-header">
+    <!-- Header Section -->
+    <div class="manager-header">
       <div class="header-content">
-        <div class="header-icon">
-          <q-icon name="perm_media" size="3rem" />
+        <div class="header-info">
+          <h1>
+            <q-icon name="perm_media" class="header-icon" />
+            Gestión de Medios
+          </h1>
+          <p>Administra tu biblioteca multimedia completa</p>
         </div>
-        <div class="header-text">
-          <h2>Gestión de Contenido Multimedia</h2>
-          <p>Administra y organiza tu biblioteca de archivos multimedia</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Main Content -->
-    <div class="main-content">
-      <!-- Stats Section -->
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-icon">
-            <q-icon name="image" size="2rem" />
-          </div>
-          <div class="stat-info">
-            <h3>{{ mediaStats.images }}</h3>
-            <p>Imágenes</p>
-          </div>
-        </div>
-        
-        <div class="stat-card">
-          <div class="stat-icon">
-            <q-icon name="videocam" size="2rem" />
-          </div>
-          <div class="stat-info">
-            <h3>{{ mediaStats.videos }}</h3>
-            <p>Videos</p>
-          </div>
-        </div>
-        
-        <div class="stat-card">
-          <div class="stat-icon">
-            <q-icon name="music_note" size="2rem" />
-          </div>
-          <div class="stat-info">
-            <h3>{{ mediaStats.audio }}</h3>
-            <p>Audio</p>
-          </div>
-        </div>
-        
-        <div class="stat-card">
-          <div class="stat-icon">
-            <q-icon name="folder" size="2rem" />
-          </div>
-          <div class="stat-info">
-            <h3>{{ mediaStats.total }}</h3>
-            <p>Total</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Actions Section -->
-      <div class="actions-section">
-        <div class="section-header">
-          <h3>Acciones Disponibles</h3>
-        </div>
-        
-        <div class="actions-grid">
-          <div class="action-card" @click="uploadMedia">
-            <div class="action-icon">
-              <q-icon name="cloud_upload" size="3rem" />
-            </div>
-            <div class="action-content">
-              <h4>Subir Archivos</h4>
-              <p>Agregar nuevos archivos multimedia al sistema</p>
-            </div>
-            <q-icon name="arrow_forward" class="action-arrow" />
-          </div>
-
-          <div class="action-card" @click="browseMedia">
-            <div class="action-icon">
-              <q-icon name="folder_open" size="3rem" />
-            </div>
-            <div class="action-content">
-              <h4>Explorar Biblioteca</h4>
-              <p>Navegar y gestionar archivos existentes</p>
-            </div>
-            <q-icon name="arrow_forward" class="action-arrow" />
-          </div>
-
-          <div class="action-card" @click="createPlaylist">
-            <div class="action-icon">
-              <q-icon name="playlist_add" size="3rem" />
-            </div>
-            <div class="action-content">
-              <h4>Crear Playlist</h4>
-              <p>Organizar contenido en listas de reproducción</p>
-            </div>
-            <q-icon name="arrow_forward" class="action-arrow" />
-          </div>
-
-          <div class="action-card" @click="manageSchedules">
-            <div class="action-icon">
-              <q-icon name="schedule" size="3rem" />
-            </div>
-            <div class="action-content">
-              <h4>Programar Horarios</h4>
-              <p>Configurar horarios de reproducción automática</p>
-            </div>
-            <q-icon name="arrow_forward" class="action-arrow" />
-          </div>
-        </div>
-      </div>
-
-      <!-- Quick Access Section -->
-      <div class="quick-access-section">
-        <div class="section-header">
-          <h3>Acceso Rápido</h3>
-        </div>
-        
-        <div class="quick-access-grid">
-          <div class="quick-access-card">
-            <q-icon name="dashboard" size="2rem" />
-            <span>Dashboard</span>
-            <q-btn
-              flat
-              round
-              icon="launch"
-              @click="goToDashboard"
-              size="sm"
-            />
-          </div>
-          
-          <div class="quick-access-card">
-            <q-icon name="settings" size="2rem" />
-            <span>Configuración</span>
-            <q-btn
-              flat
-              round
-              icon="launch"
-              @click="goToConfig"
-              size="sm"
-            />
-          </div>
-          
-          <div class="quick-access-card">
-            <q-icon name="play_circle" size="2rem" />
-            <span>Reproductor</span>
-            <q-btn
-              flat
-              round
-              icon="launch"
-              @click="goToPlayer"
-              size="sm"
-            />
-          </div>
+        <div class="header-actions">
+          <q-btn
+            label="Volver al Admin"
+            icon="arrow_back"
+            color="white"
+            unelevated
+            class="back-btn"
+            @click="$router.push('/admin')"
+          />
         </div>
       </div>
     </div>
 
-    <!-- Development Notice -->
-    <div class="dev-notice">
-      <q-icon name="construction" size="1.5rem" />
-      <span>Módulo en desarrollo - Funcionalidad completa próximamente</span>
+    <!-- Content Section -->
+    <div class="manager-content">
+      <!-- Upload Section -->
+      <div class="upload-section">
+        <div class="section-title">
+          <h3>
+            <q-icon name="cloud_upload" />
+            Subir Nuevo Contenido
+          </h3>
+        </div>
+        <MediaUploader 
+          @upload-complete="handleUploadComplete"
+          @upload-error="handleUploadError"
+        />
+      </div>
+
+      <!-- Media Gallery Section -->
+      <div class="gallery-section">
+        <MediaGallery
+          :media-files="mediaFiles"
+          :backend-base-url="backendBaseUrl"
+          :loading="mediaLoading"
+          mode="full"
+          title="Biblioteca Multimedia"
+          subtitle="Gestiona tu biblioteca completa"
+          @refresh="loadMedia"
+          @edit="editMedia"
+          @delete="deleteMedia"
+        />
+      </div>
     </div>
+
+    <!-- Edit Media Dialog -->
+    <EditMediaDialog
+      v-model="editDialog"
+      :media="selectedMedia"
+      @save="handleEditSave"
+    />
+
+    <!-- Edit Media Dialog -->
+    <EditMediaDialog
+      v-model="editDialog"
+      :media="selectedMedia"
+      @save="handleEditSave"
+    />
   </div>
 </template>
 
 <script>
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useToast } from 'vue-toastification'
+import { useQuasar } from 'quasar'
+
+// Componentes
 import ThemeToggle from '../components/ThemeToggle.vue'
+import MediaUploader from '../components/MediaUploader.vue'
+import MediaGallery from '../components/dashboard/MediaGallery.vue'
+import EditMediaDialog from '../components/dashboard/dialogs/EditMediaDialog.vue'
+
+// Composables y servicios
 import { useTheme } from '../composables/useTheme'
+import { useMediaUrl } from '../composables/useMediaUrl'
+import { mediaAPI } from '../services/api'
 
 export default {
   name: 'MediaManager',
   components: {
-    ThemeToggle
+    ThemeToggle,
+    MediaUploader,
+    MediaGallery,
+    EditMediaDialog
   },
   setup() {
-    const router = useRouter()
+    console.log('🎬 MediaManager component setup() called')
+    console.log('📍 Current URL:', window.location.href)
+    
+    const $router = useRouter()
+    const $route = useRoute()
     const toast = useToast()
+    const $q = useQuasar()
     const { isDarkMode } = useTheme()
+    const { backendBaseUrl } = useMediaUrl()
+    
+    // Estados reactivos
+    const mediaFiles = ref([])
+    const mediaLoading = ref(false)
+    const editDialog = ref(false)
+    const selectedMedia = ref(null)
 
-    // Media statistics (mock data for now)
-    const mediaStats = ref({
-      images: 42,
-      videos: 18,
-      audio: 27,
-      total: 87
-    })
-
-    // Action handlers
-    const uploadMedia = () => {
-      toast.info('Función de subida de archivos en desarrollo')
-    }
-
-    const browseMedia = () => {
-      toast.info('Explorador de archivos en desarrollo')
-    }
-
-    const createPlaylist = () => {
-      toast.info('Creador de playlists en desarrollo')
-    }
-
-    const manageSchedules = () => {
-      toast.info('Gestor de horarios en desarrollo')
-    }
-
-    // Navigation
-    const goToDashboard = () => {
-      router.push('/admin')
-    }
-
-    const goToConfig = () => {
-      router.push('/config')
-    }
-
-    const goToPlayer = () => {
-      router.push('/player')
-    }
-
-    // Load media statistics
-    const loadMediaStats = async () => {
+    // Cargar medios
+    const loadMedia = async () => {
+      console.log('📁 Cargando medios...')
+      mediaLoading.value = true
       try {
-        // Here you would load real statistics from API
-        // For now using mock data
-        console.log('Loading media statistics...')
+        const response = await mediaAPI.list()
+        mediaFiles.value = response.data || []
+        console.log(`✅ ${mediaFiles.value.length} archivos multimedia cargados`)
       } catch (error) {
-        console.error('Error loading media stats:', error)
-        toast.error('Error cargando estadísticas de multimedia')
+        console.error('❌ Error cargando medios:', error)
+        toast.error('Error al cargar los archivos multimedia')
+        mediaFiles.value = []
+      } finally {
+        mediaLoading.value = false
       }
     }
 
-    onMounted(() => {
-      loadMediaStats()
+    // Actualizar medio
+    const updateMedia = async (mediaId, updateData) => {
+      try {
+        await mediaAPI.update(mediaId, updateData)
+        return true
+      } catch (error) {
+        console.error('❌ Error actualizando medio:', error)
+        throw error
+      }
+    }
+
+    // Eliminar medio
+    const deleteMediaFile = async (mediaId) => {
+      try {
+        await mediaAPI.delete(mediaId)
+        return true
+      } catch (error) {
+        console.error('❌ Error eliminando medio:', error)
+        throw error
+      }
+    }
+
+    // Manejar subida exitosa
+    const handleUploadComplete = (newMedia) => {
+      console.log('✅ Archivo subido exitosamente:', newMedia)
+      toast.success(`Archivo "${newMedia.filename}" subido correctamente`)
+      loadMedia() // Recargar la lista
+    }
+
+    // Manejar error de subida
+    const handleUploadError = (error) => {
+      console.error('❌ Error en subida:', error)
+      toast.error('Error al subir el archivo')
+    }
+
+    // Editar medio
+    const editMedia = (media) => {
+      console.log('✏️ Editando medio:', media)
+      selectedMedia.value = media
+      editDialog.value = true
+    }
+
+    // Manejar guardado de edición
+    const handleEditSave = async (updatedMedia) => {
+      try {
+        await updateMedia(updatedMedia.id, updatedMedia)
+        toast.success('Medio actualizado correctamente')
+        editDialog.value = false
+        loadMedia() // Recargar la lista
+      } catch (error) {
+        console.error('❌ Error actualizando medio:', error)
+        toast.error('Error al actualizar el medio')
+      }
+    }
+
+    // Eliminar medio
+    const deleteMedia = async (mediaId) => {
+      $q.dialog({
+        title: 'Confirmar eliminación',
+        message: '¿Estás seguro de que quieres eliminar este archivo multimedia?',
+        cancel: true,
+        persistent: true
+      }).onOk(async () => {
+        try {
+          await deleteMediaFile(mediaId)
+          toast.success('Archivo eliminado correctamente')
+          loadMedia() // Recargar la lista
+        } catch (error) {
+          console.error('❌ Error eliminando medio:', error)
+          toast.error('Error al eliminar el archivo')
+        }
+      })
+    }
+
+    // Inicialización
+    onMounted(async () => {
+      console.log('🚀 MediaManager mounted')
+      $q.dark.set(isDarkMode.value)
+      await loadMedia()
     })
 
     return {
-      mediaStats,
-      uploadMedia,
-      browseMedia,
-      createPlaylist,
-      manageSchedules,
-      goToDashboard,
-      goToConfig,
-      goToPlayer,
-      isDarkMode
+      // Estados
+      mediaFiles,
+      mediaLoading,
+      editDialog,
+      selectedMedia,
+      backendBaseUrl,
+      $route,
+      
+      // Métodos
+      loadMedia,
+      handleUploadComplete,
+      handleUploadError,
+      editMedia,
+      handleEditSave,
+      deleteMedia
     }
   }
 }
 </script>
 
 <style scoped>
-.media-manager-container {
+.media-manager {
   min-height: 100vh;
-  background: var(--background);
-  color: var(--text-primary);
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  color: #333;
+}
+
+.body--dark .media-manager {
+  background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+  color: #e2e8f0;
 }
 
 .theme-toggle {
   position: fixed;
   top: 20px;
   right: 20px;
-  z-index: 100;
+  z-index: 1000;
 }
 
-.media-header {
-  background: linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%);
+/* Header Styles */
+.manager-header {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%);
   padding: 60px 20px 40px;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.media-header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: radial-gradient(circle at 70% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
-  pointer-events: none;
+  margin-bottom: 30px;
 }
 
 .header-content {
-  max-width: 800px;
+  max-width: 1200px;
   margin: 0 auto;
-  position: relative;
-  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.header-info h1 {
+  color: white;
+  font-size: 2.5rem;
+  font-weight: 600;
+  margin: 0 0 10px 0;
+  display: flex;
+  align-items: center;
+  gap: 15px;
 }
 
 .header-icon {
-  color: var(--on-primary);
-  margin-bottom: 20px;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+  font-size: 3rem !important;
 }
 
-.header-text h2 {
-  color: var(--on-primary);
-  font-size: 2.5rem;
-  font-weight: 700;
-  margin: 0 0 12px 0;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.header-text p {
-  color: var(--on-primary);
+.header-info p {
+  color: rgba(255, 255, 255, 0.9);
   font-size: 1.2rem;
   margin: 0;
-  opacity: 0.9;
 }
 
-.main-content {
-  padding: 40px 20px;
+.header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.back-btn {
+  background: rgba(255, 255, 255, 0.2) !important;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white !important;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.back-btn:hover {
+  background: rgba(255, 255, 255, 0.3) !important;
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Content Styles */
+.manager-content {
   max-width: 1200px;
   margin: 0 auto;
+  padding: 0 20px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
 }
 
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-  margin-bottom: 40px;
-}
-
-.stat-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
+.upload-section,
+.gallery-section {
+  background: rgba(255, 255, 255, 0.95);
   border-radius: 16px;
-  padding: 24px;
+  padding: 30px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.body--dark .upload-section,
+.body--dark .gallery-section {
+  background: rgba(30, 30, 30, 0.95);
+  border-color: #374151;
+}
+
+.section-title {
   display: flex;
   align-items: center;
-  gap: 16px;
-  transition: all 0.3s ease;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #e5e7eb;
 }
 
-.stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
-  border-color: var(--primary);
+.body--dark .section-title {
+  border-bottom-color: #374151;
 }
 
-.stat-icon {
-  color: var(--primary);
-  background: var(--hover-primary);
-  padding: 12px;
-  border-radius: 12px;
-}
-
-.stat-info h3 {
-  margin: 0 0 4px 0;
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.stat-info p {
-  margin: 0;
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-}
-
-.actions-section,
-.quick-access-section {
-  margin-bottom: 40px;
-}
-
-.section-header {
-  margin-bottom: 24px;
-}
-
-.section-header h3 {
-  margin: 0;
+.section-title h3 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   font-size: 1.5rem;
   font-weight: 600;
-  color: var(--text-primary);
-}
-
-.actions-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
-}
-
-.action-card {
-  background: var(--surface);
-  border: 2px solid var(--border);
-  border-radius: 16px;
-  padding: 24px;
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.action-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-lg);
-  border-color: var(--primary);
-}
-
-.action-icon {
-  color: var(--secondary);
-  transition: all 0.3s ease;
-}
-
-.action-card:hover .action-icon {
-  transform: scale(1.1);
-  color: var(--primary);
-}
-
-.action-content {
-  flex: 1;
-}
-
-.action-content h4 {
-  margin: 0 0 8px 0;
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.action-content p {
+  color: #1f2937;
   margin: 0;
-  color: var(--text-secondary);
-  font-size: 0.95rem;
-  line-height: 1.4;
 }
 
-.action-arrow {
-  color: var(--accent);
-  transition: all 0.3s ease;
+.body--dark .section-title h3 {
+  color: #e2e8f0;
 }
 
-.action-card:hover .action-arrow {
-  transform: translateX(4px);
-  color: var(--primary);
+.section-title .q-icon {
+  color: #6366f1;
+  font-size: 1.8rem;
 }
 
-.quick-access-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-}
-
-.quick-access-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 20px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  transition: all 0.3s ease;
-}
-
-.quick-access-card:hover {
-  background: var(--hover-color);
-  border-color: var(--primary);
-}
-
-.quick-access-card q-icon:first-child {
-  color: var(--primary);
-}
-
-.quick-access-card span {
-  flex: 1;
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-.dev-notice {
-  background: var(--warning);
-  color: var(--on-primary);
-  padding: 16px 20px;
-  margin: 20px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-weight: 500;
-  box-shadow: var(--shadow-md);
-}
-
+/* Responsive Design */
 @media (max-width: 768px) {
-  .media-header {
-    padding: 40px 15px 30px;
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
   }
   
-  .header-text h2 {
+  .header-info h1 {
     font-size: 2rem;
   }
   
-  .main-content {
-    padding: 20px 10px;
+  .manager-content {
+    padding: 0 15px 40px;
   }
   
-  .stats-grid {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 15px;
-  }
-  
-  .stat-card {
+  .upload-section,
+  .gallery-section {
     padding: 20px;
   }
   
-  .actions-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .action-card {
-    padding: 20px;
-  }
-  
-  .quick-access-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .theme-toggle {
-    top: 10px;
-    right: 10px;
+  .section-title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
   }
 }
 </style>

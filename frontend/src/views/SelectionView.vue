@@ -7,7 +7,7 @@
     <div class="selection-card">
       <div class="card-header">
         <div class="logo-section">
-          <q-icon name="favorite" size="4rem" class="pride-icon" />
+          <q-icon name="campaign" size="4rem" class="ads-icon" />
           <h2 class="welcome-title">Bienvenido</h2>
           <h3 class="system-title">Pochtecayotl Signance System</h3>
         </div>
@@ -60,7 +60,7 @@ export default {
     const { isDarkMode } = useTheme()
     
     const goPlayer = () => router.push('/player')
-    const goAdmin = () => router.push('/login')
+    const goAdmin = () => router.push('/admin')
     
     return { 
       goPlayer, 

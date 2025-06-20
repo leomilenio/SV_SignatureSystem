@@ -45,7 +45,9 @@ import {
   QDialog,
   QExpansionItem,
   QTooltip,
-  QBanner
+  QBanner,
+  QBtnToggle,
+  QSkeleton
 } from 'quasar'
 import quasarLang from 'quasar/lang/es'
 import quasarIconSet from 'quasar/icon-set/material-icons'
@@ -107,7 +109,9 @@ app.use(Quasar, {
     QDialog,
     QExpansionItem,
     QTooltip,
-    QBanner
+    QBanner,
+    QBtnToggle,
+    QSkeleton
   },
   lang: quasarLang,
   iconSet: quasarIconSet,

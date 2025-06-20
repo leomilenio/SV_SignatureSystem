@@ -4,8 +4,8 @@ import backendDetector from './backendDetector'
 
 // Configuración inicial de Axios (se actualizará dinámicamente)
 let api = axios.create({
-  baseURL: 'http://127.0.0.1:8002/api',
-  timeout: 10000,
+  baseURL: '', // Iniciar vacío, se configurará automáticamente
+  timeout: 15000, // Aumentar timeout para detección
   headers: {
     'Content-Type': 'application/json'
   }
@@ -30,20 +30,30 @@ const initializeAPI = async () => {
         api.defaults.baseURL = `${cached.baseUrl}/api`
         
         // Verificar que el backend cached siga funcionando
-        const isWorking = await backendDetector.testPort(cached.port)
-        if (isWorking) {
-          isInitialized = true
-          console.log('✅ API inicializada correctamente con backend desde caché')
-          return api
-        } else {
-          console.log('❌ Backend cached no responde, detectando nuevamente...')
+        try {
+          const isWorking = await backendDetector.testPort(cached.port)
+          if (isWorking) {
+            isInitialized = true
+            console.log('✅ API inicializada correctamente con backend desde caché')
+            return api
+          } else {
+            console.log('❌ Backend cached no responde, detectando nuevamente...')
+            backendDetector.clearCache()
+          }
+        } catch (error) {
+          console.log('❌ Error probando backend cached:', error.message)
           backendDetector.clearCache()
         }
       }
       
       // Detectar backend automáticamente
+      console.log('🔍 Detectando backend automáticamente...')
       const { baseUrl } = await backendDetector.detectBackend()
       api.defaults.baseURL = `${baseUrl}/api`
+      
+      // Hacer una prueba rápida de conectividad
+      console.log('🧪 Probando conectividad con el backend...')
+      await api.get('/health', { timeout: 5000 })
       
       isInitialized = true
       console.log(`✅ API inicializada correctamente con backend: ${baseUrl}`)
@@ -57,8 +67,20 @@ const initializeAPI = async () => {
       
       return api
     } catch (error) {
-      console.error('❌ Error al inicializar API:', error)
-      throw new Error(`No se pudo conectar al backend: ${error.message}`)
+      console.error('❌ Error inicializando API:', error)
+      // Fallback: intentar con localhost en puerto 8000
+      console.log('🔄 Intentando fallback con localhost:8000...')
+      api.defaults.baseURL = 'http://127.0.0.1:8000/api'
+      
+      try {
+        await api.get('/health', { timeout: 3000 })
+        console.log('✅ API inicializada con fallback localhost:8000')
+        isInitialized = true
+        return api
+      } catch (fallbackError) {
+        console.error('❌ Fallback también falló:', fallbackError)
+        throw new Error('No se pudo conectar con el backend. Verifica que el servidor esté ejecutándose.')
+      }
     }
   })()
 

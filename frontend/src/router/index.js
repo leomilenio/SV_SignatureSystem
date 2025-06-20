@@ -71,18 +71,11 @@ const routes = [
       role: 'admin',
       title: 'Dashboard Admin - Pochtecayotl Signance System'
     }
-  }
-  // Futuras rutas para el sistema completo:
-  /*
-  {
-    path: '/admin',
-    name: 'Admin',
-    component: () => import('../views/AdminView.vue'),
-    meta: { requiresAuth: true, role: 'admin' }
   },
+  // Rutas administrativas adicionales:
   {
-    path: '/config',
-    name: 'Config',
+    path: '/config-admin',
+    name: 'ConfigAdmin',
     component: () => import('../views/ConfigView.vue'),
     meta: { requiresAuth: true, role: 'admin' }
   },
@@ -93,12 +86,11 @@ const routes = [
     meta: { requiresAuth: true, role: 'admin' }
   },
   {
-    path: '/player',
-    name: 'Player',
+    path: '/player-admin',
+    name: 'PlayerAdmin',
     component: () => import('../views/PlayerView.vue'),
     meta: { requiresAuth: true }
   }
-  */
 ]
 
 const router = createRouter({
@@ -108,6 +100,7 @@ const router = createRouter({
 
 // Navigation Guards
 router.beforeEach((to, from, next) => {
+  
   // Actualizar título de la página
   document.title = to.meta.title || 'Pochtecayotl Signance System'
   

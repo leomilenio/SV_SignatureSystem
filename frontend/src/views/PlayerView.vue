@@ -119,9 +119,9 @@
       <div class="media-display-area">
         <div v-if="currentMedia" class="media-container">
           <!-- Image Display -->
-          <div v-if="currentMedia.media_type === 'image'" class="image-display">
+          <div v-if="currentMedia.media_type === 'image' && currentMediaSrc" class="image-display">
             <img 
-              :src="getMediaUrl(currentMedia)" 
+              :src="currentMediaSrc" 
               :alt="currentMedia.filename"
               class="media-image"
               @error="handleMediaError"
@@ -130,10 +130,10 @@
           </div>
           
           <!-- Video Display -->
-          <div v-else-if="currentMedia.media_type === 'video'" class="video-display">
+          <div v-else-if="currentMedia.media_type === 'video' && currentMediaSrc" class="video-display">
             <video 
               ref="videoPlayer"
-              :src="getMediaUrl(currentMedia)"
+              :src="currentMediaSrc"
               class="media-video"
               @ended="onMediaEnded"
               @error="handleMediaError"
@@ -141,6 +141,12 @@
               autoplay
               muted
             />
+          </div>
+          
+          <!-- Loading state while URL is being constructed -->
+          <div v-else-if="currentMedia && !currentMediaSrc" class="loading-media">
+            <q-spinner-dots color="primary" size="3rem" />
+            <p>Preparando {{ currentMedia.filename }}...</p>
           </div>
           
           <!-- Media Info Overlay -->
@@ -298,12 +304,13 @@
 <script>
 import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import { playlistAPI, scheduleAPI, businessAPI } from '../services/api'
+import { playerAPI, getMediaUrl } from '../services/playerAPI'  // Usar API pública del reproductor
 import backendDetector from '../services/backendDetector'
 import { useToast } from 'vue-toastification'
 import ThemeToggle from '../components/ThemeToggle.vue'
 import { useTheme } from '../composables/useTheme'
 import { useWebSocket } from '../services/ws'
+import { useMediaUrl } from '../composables/useMediaUrl'
 
 export default {
   name: 'PlayerView',
@@ -314,6 +321,7 @@ export default {
     const router = useRouter()
     const toast = useToast()
     const { isDarkMode } = useTheme()
+    const { backendBaseUrl, buildMediaUrl } = useMediaUrl()
     
     // Referencias a elementos del DOM
     const videoPlayer = ref(null)
@@ -329,6 +337,7 @@ export default {
     const showInfo = ref(false)
     const elapsedTime = ref(0)
     const scheduleOverride = ref(null)
+    const currentMediaUrl = ref('') // URL actual del media
     
     // Timers
     let playbackTimer = null
@@ -340,6 +349,11 @@ export default {
       if (!currentMedia.value) return 0
       const duration = getCurrentDuration()
       return duration > 0 ? elapsedTime.value / duration : 0
+    })
+    
+    // Computed para URL del media actual
+    const currentMediaSrc = computed(() => {
+      return currentMediaUrl.value || ''
     })
     
     // WebSocket: desestructurar funciones necesarias
@@ -408,24 +422,6 @@ export default {
       }
     }
     
-    // Debugging - verificar token
-    const checkAuthStatus = () => {
-      const token = localStorage.getItem('signance_token')
-      console.log('Estado de autenticación:', {
-        hasToken: !!token,
-        token: token ? token.substring(0, 20) + '...' : null,
-        localStorage: localStorage.length + ' items'
-      })
-      
-      if (!token) {
-        console.warn('No hay token de autenticación guardado')
-        toast.warning('No hay sesión activa. Por favor inicia sesión.')
-        router.push('/login')
-        return false
-      }
-      return true
-    }
-    
     // Funciones de utilidad
     const formatTime = (seconds) => {
       const mins = Math.floor(seconds / 60)
@@ -451,66 +447,15 @@ export default {
       return currentMedia.value.effective_duration || currentMedia.value.duration || 5
     }
     
-    const getMediaUrl = (media) => {
-      if (!media) return ''
-      
-      // Obtener filepath del media
-      let filepath = media.filepath || media.file_path || ''
-      
-      console.log('Construyendo URL para media:', {
-        filename: media.filename,
-        original_filepath: filepath
-      })
-      
-      // Si no hay filepath, intentar construir uno basado en el ID o filename
-      if (!filepath) {
-        console.warn('No se encontró filepath, intentando construir...')
-        if (media.id) {
-          // Intentar con el patrón UUID que vimos en el directorio uploads
-          filepath = `/uploads/${media.id}`
-        } else {
-          console.error('No se puede construir filepath sin ID')
-          return ''
-        }
-      }
-      
-      // Normalizar el path
-      if (filepath && !filepath.startsWith('/')) {
-        filepath = '/' + filepath
-      }
-      
-      // Si no incluye /uploads/, agregarlo
-      if (filepath && !filepath.includes('/uploads/')) {
-        // Si ya empieza con /, quitarlo antes de agregar /uploads
-        if (filepath.startsWith('/')) {
-          filepath = filepath.substring(1)
-        }
-        filepath = `/uploads/${filepath}`
-      }
-      
-      const baseUrl = 'http://127.0.0.1:8002'
-      const fullUrl = `${baseUrl}${filepath}`
-      
-      console.log('URL construida:', {
-        filename: media.filename,
-        final_filepath: filepath,
-        full_url: fullUrl
-      })
-      
-      return fullUrl
-    }
+    // Usar la función importada de playerAPI
+    const getMediaUrlForPlayer = getMediaUrl
     
     // Funciones de carga de datos
     const fetchPlaylists = async () => {
-      // Verificar autenticación antes de hacer la petición
-      if (!checkAuthStatus()) {
-        return
-      }
-      
       loading.value = true
       try {
         console.log('Intentando cargar playlists...')
-        const response = await playlistAPI.list()
+        const response = await playerAPI.listPlaylists()
         playlists.value = response.data || []
         console.log('Playlists cargadas exitosamente:', playlists.value)
       } catch (error) {
@@ -531,30 +476,34 @@ export default {
     const loadPlaylistMedia = async (playlistId) => {
       try {
         console.log('Cargando medios de playlist:', playlistId)
-        const response = await playlistAPI.getMedia(playlistId)
+        const response = await playerAPI.getPlaylist(playlistId)
         
-        // El endpoint devuelve la playlist completa, extraer los medios
+        // El endpoint /playlists/{id}/player devuelve { medias: [...], ... }
         const playlistData = response.data || {}
-        const mediaData = playlistData.medias || []
+        const medias = playlistData.medias || []
         
-        if (!Array.isArray(mediaData)) {
-          console.error('La respuesta no contiene un array de medios:', playlistData)
+        if (!Array.isArray(medias)) {
+          console.error('La respuesta no contiene un array de medias:', playlistData)
           playlistMedia.value = []
           toast.error('Error: formato de datos incorrecto')
           return
         }
         
-        playlistMedia.value = mediaData
+        // Los medias ya vienen con toda la información necesaria
+        playlistMedia.value = medias.map(media => ({
+          ...media,  // Datos del media (id, filename, media_type, etc.)
+          effective_duration: media.duration,  // Ya incluye la duración específica de la playlist
+          url: media.file_url  // URL del archivo
+        }))
         
         console.log('Medios de playlist cargados:', {
           count: playlistMedia.value.length,
-          medios: playlistMedia.value.map(m => ({
-            id: m.id,
-            filename: m.filename,
-            media_type: m.media_type,
-            filepath: m.filepath,
-            duration: m.duration,
-            effective_duration: m.effective_duration
+          playlist_name: playlistData.name,
+          items: medias.map(media => ({
+            id: media.id,
+            filename: media.filename,
+            duration: media.duration,
+            file_url: media.file_url
           }))
         })
         
@@ -578,18 +527,36 @@ export default {
         currentMedia.value = media
         elapsedTime.value = 0
         
-        console.log('Medio actual cargado:', {
-          index: currentMediaIndex.value,
-          filename: media.filename,
-          media_type: media.media_type,
-          filepath: media.filepath,
-          duration: media.duration,
-          effective_duration: media.effective_duration,
-          url: getMediaUrl(media)
+        // Limpiar URL anterior
+        currentMediaUrl.value = ''
+        
+        // Construir URL del media usando la función importada (async en background)
+        getMediaUrl(media).then(mediaUrl => {
+          // Solo actualizar si seguimos en el mismo medio
+          if (currentMedia.value === media) {
+            currentMediaUrl.value = mediaUrl // Actualizar URL reactiva
+            
+            console.log('Medio actual cargado:', {
+              index: currentMediaIndex.value,
+              filename: media.filename,
+              media_type: media.media_type,
+              filepath: media.filepath,
+              duration: media.duration,
+              effective_duration: media.effective_duration,
+              url: mediaUrl
+            })
+          }
+        }).catch(error => {
+          console.error('Error construyendo URL del media:', error)
+          if (currentMedia.value === media) {
+            currentMediaUrl.value = '' // Limpiar URL en caso de error
+            toast.error(`Error preparando medio: ${media.filename}`)
+          }
         })
       } else {
         console.warn('No hay medios disponibles para cargar')
         currentMedia.value = null
+        currentMediaUrl.value = ''
       }
     }
     
@@ -978,7 +945,7 @@ export default {
       console.error('Error de medio:', {
         error,
         media: currentMedia.value,
-        url: getMediaUrl(currentMedia.value)
+        url: currentMediaUrl.value
       })
       
       toast.error(`Error al cargar: ${currentMedia.value?.filename || 'medio desconocido'}`)
@@ -1196,6 +1163,7 @@ export default {
       elapsedTime,
       scheduleOverride,
       progress,
+      currentMediaSrc, // Nueva URL reactiva
       videoPlayer,
       isFullscreen,
       showFullscreenControls,
@@ -1219,8 +1187,6 @@ export default {
       formatTime,
       formatTotalDuration,
       getCurrentDuration,
-      getMediaUrl,
-      checkAuthStatus,
       initializeFullscreenState,
       onMouseMoveFullscreen,
       
@@ -1826,15 +1792,15 @@ export default {
 /* Business Logo Overlay */
 .business-logo-overlay {
   position: fixed;
-  bottom: 20px;
+  top: 20px;
   right: 20px;
   z-index: 1500;
   opacity: 0.8;
 }
 
 .business-logo {
-  max-width: 120px;
-  max-height: 80px;
+  max-width: 138px;
+  max-height: 92px;
   object-fit: contain;
   filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
 }

@@ -73,7 +73,7 @@
 
       <!-- Loading state -->
       <div v-else-if="loading" class="loading-state">
-        <q-skeleton height="150px" class="q-mb-md" v-for="n in (mode === 'compact' ? 8 : 6)" :key="n" />
+        <q-skeleton height="150px" class="q-mb-md" v-for="n in 6" :key="n" />
       </div>
 
       <!-- Vista de tarjetas -->
@@ -298,15 +298,13 @@ const displayedMedia = computed(() => {
 /* Media Grid */
 .media-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 20px;
 }
 
 .compact-grid {
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 16px;
-  max-height: 500px;
-  overflow-y: auto;
 }
 
 /* Media List */
@@ -337,20 +335,11 @@ const displayedMedia = computed(() => {
   
   .header-controls {
     justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 12px;
   }
   
   .search-input {
     min-width: auto;
     flex: 1;
-    max-width: 100%;
-  }
-  
-  .view-controls {
-    order: 2;
-    flex: 1;
-    justify-content: center;
   }
   
   .media-grid {
@@ -359,32 +348,7 @@ const displayedMedia = computed(() => {
   }
   
   .compact-grid {
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 12px;
-    max-height: 400px;
-  }
-}
-
-@media (max-width: 480px) {
-  .gallery-header {
-    padding: 16px;
-  }
-  
-  .gallery-content {
-    padding: 16px;
-  }
-  
-  .header-controls {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .view-controls {
-    order: 1;
-  }
-  
-  .search-input {
-    order: 2;
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
@@ -403,26 +367,5 @@ const displayedMedia = computed(() => {
 
 .compact-view .gallery-content {
   padding: 20px;
-}
-
-/* View Controls Styling */
-.view-controls :deep(.q-btn-toggle) {
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.body--dark .view-controls :deep(.q-btn-toggle) {
-  border-color: #374151;
-}
-
-.view-controls :deep(.q-btn) {
-  padding: 8px 16px;
-  min-height: 36px;
-}
-
-.view-controls :deep(.q-btn.q-btn--active) {
-  background-color: #6366f1 !important;
-  color: white !important;
 }
 </style>

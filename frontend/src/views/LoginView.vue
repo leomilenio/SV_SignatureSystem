@@ -83,20 +83,21 @@
 
     <!-- Setup inicial del administrador -->
     <q-dialog v-model="showSetupDialog" persistent>
-      <q-card style="min-width: 400px">
-        <q-card-section class="row items-center">
+      <q-card class="setup-dialog-card" style="min-width: 400px">
+        <q-card-section class="setup-header row items-center">
           <q-icon name="admin_panel_settings" size="2rem" color="orange" />
-          <span class="q-ml-sm text-h6">Configuración Inicial</span>
+          <span class="q-ml-sm text-h6 setup-title">Configuración Inicial</span>
         </q-card-section>
 
-        <q-card-section>
-          <p>El sistema necesita configuración inicial. Crea el usuario administrador:</p>
+        <q-card-section class="setup-content">
+          <p class="setup-description">El sistema necesita configuración inicial. Crea el usuario administrador:</p>
           
           <q-form @submit="handleSetupAdmin" class="q-gutter-md">
             <q-input
               v-model="setupData.username"
               label="Usuario Administrador"
               outlined
+              class="setup-input"
               :rules="[val => !!val || 'Requerido']"
             />
             
@@ -105,15 +106,17 @@
               label="Contraseña"
               type="password"
               outlined
+              class="setup-input"
               :rules="[val => !!val || 'Requerido']"
             />
           </q-form>
         </q-card-section>
 
-        <q-card-actions align="right">
+        <q-card-actions align="right" class="setup-actions">
           <q-btn
             label="Configurar"
             color="primary"
+            class="setup-btn"
             @click="handleSetupAdmin"
             :loading="isSetupLoading"
           />
@@ -212,8 +215,8 @@ export default {
         
         toast.success(`¡Bienvenido, ${credentials.username}!`)
         
-        // Redirigir al reproductor después del login exitoso
-        router.push('/player')
+        // Redirigir al dashboard admin después del login exitoso
+        router.push('/admin')
         
       } catch (error) {
         console.error('Error en login:', error)
@@ -284,6 +287,40 @@ export default {
 </script>
 
 <style scoped>
+/* Variables CSS */
+:root {
+  --gradient-main: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-light: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.8) 100%);
+  --gradient-text: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%);
+  --gradient-accent: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  --gradient-button: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  --surface: rgba(255, 255, 255, 0.95);
+  --background: #f8fafc;
+  --border: #e2e8f0;
+  --primary: #6366f1;
+  --primary-alpha: rgba(99, 102, 241, 0.1);
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* Variables para modo oscuro */
+.body--dark {
+  --gradient-main: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+  --gradient-light: linear-gradient(135deg, rgba(30,30,30,0.9) 0%, rgba(30,30,30,0.8) 100%);
+  --gradient-text: linear-gradient(135deg, #818cf8 0%, #a78bfa 50%, #38bdf8 100%);
+  --gradient-accent: linear-gradient(90deg, #4338ca 0%, #6d28d9 100%);
+  --gradient-button: linear-gradient(135deg, #4338ca 0%, #7c3aed 100%);
+  --surface: rgba(30, 30, 30, 0.95);
+  --background: #0f172a;
+  --border: #334155;
+  --primary: #818cf8;
+  --primary-alpha: rgba(129, 140, 248, 0.1);
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
 .login-container {
   display: flex;
   justify-content: center;
@@ -367,11 +404,15 @@ export default {
   margin: 0 0 0.2rem 0;
   font-size: 2.2rem;
   font-weight: 700;
-  background: var(--gradient-text);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
   line-height: 1.1;
+  color: #6366f1;
+  text-shadow: 0 2px 4px rgba(99, 102, 241, 0.3);
+}
+
+/* Modo oscuro */
+.body--dark .app-title {
+  color: #818cf8;
+  text-shadow: 0 2px 4px rgba(129, 140, 248, 0.3);
 }
 
 .app-subtitle-main {
@@ -617,5 +658,80 @@ export default {
   .modern-input :deep(.q-field__control) {
     min-height: 46px;
   }
+}
+
+/* Estilos para el dialog de setup */
+.setup-dialog-card {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 12px !important;
+  backdrop-filter: blur(20px);
+}
+
+.setup-header {
+  background: var(--gradient-light) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.setup-title {
+  color: var(--text-primary) !important;
+  font-weight: 600;
+}
+
+.setup-content {
+  padding: 24px !important;
+}
+
+.setup-description {
+  color: var(--text-secondary) !important;
+  margin-bottom: 20px;
+  font-size: 0.95rem;
+}
+
+.setup-input {
+  margin-bottom: 16px;
+}
+
+.setup-input :deep(.q-field__label) {
+  color: var(--text-secondary) !important;
+}
+
+.setup-input :deep(.q-field__control) {
+  background: var(--surface) !important;
+}
+
+.setup-input :deep(.q-field__outline) {
+  border-color: var(--border) !important;
+}
+
+.setup-input :deep(.q-field--focused .q-field__outline) {
+  border-color: var(--primary) !important;
+}
+
+.setup-input :deep(.q-field__native) {
+  color: var(--text-primary) !important;
+}
+
+.setup-actions {
+  padding: 16px 24px !important;
+  border-top: 1px solid var(--border) !important;
+}
+
+.setup-btn {
+  background: var(--gradient-button) !important;
+  border-radius: 8px;
+  font-weight: 600;
+  padding: 8px 24px;
+}
+
+/* Estilos específicos para modo oscuro en el dialog */
+.body--dark .setup-dialog-card {
+  background: rgba(30, 30, 30, 0.95) !important;
+  border-color: #374151 !important;
+}
+
+.body--dark .setup-input :deep(.q-field__control) {
+  background: rgba(30, 30, 30, 0.8) !important;
+  border-color: #374151 !important;
 }
 </style>
