@@ -435,3 +435,6 @@ test_*.py
 .DS_Store
 .DS_Store
 backend/signance.db
+
+
+backend/static_backup*
