@@ -15,6 +15,9 @@ export default {
     
     // Verificar conectividad con el backend usando auto-detección
     this.checkBackendConnection()
+    
+    // Inicializar correcciones de iconos
+    this.initializeIconFixes()
   },
   methods: {
     async checkBackendConnection() {
@@ -30,6 +33,97 @@ export default {
           caption: 'Verifica que el backend esté ejecutándose en el rango de puertos 8000-8010'
         })
       }
+    },
+    
+    initializeIconFixes() {
+      console.log('🎨 Inicializando correcciones de iconos...')
+      
+      // Verificar si Material Icons está disponible
+      this.checkMaterialIconsAvailability()
+      
+      // Aplicar CSS de corrección
+      this.applyIconCSS()
+      
+      // Aplicar correcciones de tamaños
+      this.applyIconSizeCorrections()
+      
+      // Verificar después de un delay
+      setTimeout(() => {
+        this.verifyIconsAfterLoad()
+      }, 2000)
+    },
+    
+    checkMaterialIconsAvailability() {
+      if (document.fonts) {
+        const materialIconsLoaded = document.fonts.check('1rem "Material Icons"')
+        console.log('🔍 Material Icons disponible:', materialIconsLoaded)
+        
+        if (!materialIconsLoaded) {
+          console.log('⚠️ Material Icons no cargado, intentando forzar carga...')
+          this.forceLoadMaterialIcons()
+        }
+      }
+    },
+    
+    forceLoadMaterialIcons() {
+      // Crear enlace directo a Google Fonts si no existe
+      const existingLink = document.querySelector('link[href*="material-icons"]')
+      if (!existingLink) {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = 'https://fonts.googleapis.com/icon?family=Material+Icons&display=swap'
+        link.onload = () => {
+          console.log('✅ Material Icons cargado desde Google Fonts')
+        }
+        document.head.appendChild(link)
+      }
+    },
+    
+    applyIconCSS() {
+      const css = `
+        /* Corrección global para Material Icons - SIN interferir con tamaños */
+        .material-icons, .q-icon {
+          font-family: 'Material Icons' !important;
+          font-weight: normal !important;
+          font-style: normal !important;
+          line-height: 1 !important;
+          letter-spacing: normal !important;
+          text-transform: none !important;
+          display: inline-block !important;
+          white-space: nowrap !important;
+          word-wrap: normal !important;
+          direction: ltr !important;
+          font-feature-settings: 'liga' !important;
+          -webkit-font-feature-settings: 'liga' !important;
+          -webkit-font-smoothing: antialiased !important;
+          -moz-osx-font-smoothing: grayscale !important;
+          /* NO forzamos font-size para permitir que Quasar lo maneje */
+        }
+      `
+      
+      const style = document.createElement('style')
+      style.textContent = css
+      document.head.appendChild(style)
+    },
+    
+    applyIconSizeCorrections() {
+      // NO aplicar correcciones de tamaños que interfieran con Quasar
+      console.log('⚠️ Saltando correcciones de tamaño para permitir que Quasar las maneje')
+    },
+    
+    verifyIconsAfterLoad() {
+      const iconElements = document.querySelectorAll('.q-icon')
+      console.log(`🔍 Verificando ${iconElements.length} elementos de iconos...`)
+      
+      iconElements.forEach((element, index) => {
+        const computedStyle = window.getComputedStyle(element)
+        const fontFamily = computedStyle.fontFamily
+        
+        if (!fontFamily.includes('Material Icons')) {
+          console.warn(`⚠️ Icono ${index} no usa Material Icons:`, fontFamily)
+          element.style.fontFamily = '"Material Icons" !important'
+        }
+      })
     }
   }
 }

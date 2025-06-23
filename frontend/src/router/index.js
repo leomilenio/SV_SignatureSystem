@@ -6,6 +6,7 @@ import SelectionView from '../views/SelectionView.vue'
 import PlayerView from '../views/PlayerView.vue'
 import ConfigView from '../views/ConfigView.vue'
 import AdminView from '../views/AdminView.vue'
+import IconSizeTestFixed from '../views/IconSizeTestFixed.vue'
 
 const routes = [
   {
@@ -90,6 +91,66 @@ const routes = [
     name: 'PlayerAdmin',
     component: () => import('../views/PlayerView.vue'),
     meta: { requiresAuth: true }
+  },
+  // Ruta de prueba para iconos
+  {
+    path: '/icon-test',
+    name: 'IconTest',
+    component: () => import('../views/IconTestView.vue'),
+    meta: { 
+      requiresAuth: false,
+      title: 'Prueba de Iconos - Pochtecayotl Signance System'
+    }
+  },
+  // Ruta de diagnóstico para iconos
+  {
+    path: '/diagnostic',
+    name: 'Diagnostic',
+    component: () => import('../views/DiagnosticView.vue'),
+    meta: { 
+      requiresAuth: false,
+      title: 'Diagnóstico de Iconos - Pochtecayotl Signance System'
+    }
+  },
+  // Ruta de prueba simple para iconos
+  {
+    path: '/simple-test',
+    name: 'SimpleTest',
+    component: () => import('../views/SimpleIconTest.vue'),
+    meta: { 
+      requiresAuth: false,
+      title: 'Prueba Simple de Iconos - Pochtecayotl Signance System'
+    }
+  },
+  // Ruta de prueba final para iconos
+  {
+    path: '/final-test',
+    name: 'FinalTest',
+    component: () => import('../views/FinalIconTest.vue'),
+    meta: { 
+      requiresAuth: false,
+      title: 'Prueba Final de Iconos - Pochtecayotl Signance System'
+    }
+  },
+  // Ruta de prueba de tamaños de iconos
+  {
+    path: '/icon-size-test',
+    name: 'IconSizeTest',
+    component: () => import('../views/IconSizeTest.vue'),
+    meta: { 
+      requiresAuth: false,
+      title: 'Prueba de Tamaños de Iconos - Pochtecayotl Signance System'
+    }
+  },
+  // Ruta de prueba de tamaños corregida
+  {
+    path: '/icon-size-test-fixed',
+    name: 'IconSizeTestFixed',
+    component: IconSizeTestFixed,
+    meta: { 
+      requiresAuth: false,
+      title: 'Prueba de Tamaños de Iconos (Corregida) - Pochtecayotl Signance System'
+    }
   }
 ]
 

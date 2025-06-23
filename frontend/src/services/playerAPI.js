@@ -4,6 +4,7 @@
  */
 import axios from 'axios'
 import backendDetector from './backendDetector'
+import { createProductionBackendDetector } from './productionDetector'
 
 // Configuración inicial de Axios para el reproductor
 let playerApi = axios.create({
@@ -26,6 +27,24 @@ const initializePlayerAPI = async () => {
   initializationPromise = (async () => {
     try {
       console.log('🎬 Inicializando API del reproductor...')
+      
+      // NUEVO: Verificar si estamos en modo producción
+      const productionConfig = createProductionBackendDetector()
+      
+      if (productionConfig) {
+        console.log('🎯 Player API en modo producción, usando mismo origen')
+        playerApi.defaults.baseURL = `${productionConfig.baseUrl}/api`
+        
+        // Verificar conectividad
+        await playerApi.get('/health', { timeout: 5000 })
+        
+        isPlayerAPIInitialized = true
+        console.log(`✅ Player API inicializada en modo producción: ${productionConfig.baseUrl}`)
+        return playerApi
+      }
+      
+      // Modo desarrollo: usar detección automática
+      console.log('🔧 Player API en modo desarrollo, detectando backend...')
       
       // Detectar backend automáticamente
       const { baseUrl } = await backendDetector.detectBackend()
@@ -71,25 +90,25 @@ export const playerAPI = {
   // Listar playlists públicas
   list: async (skip = 0, limit = 100) => {
     const api = await ensurePlayerAPIInitialized()
-    return api.get(`/playlists/public?skip=${skip}&limit=${limit}`)
+    return api.get(`/player/playlists?skip=${skip}&limit=${limit}`)
   },
   
   // Alias para compatibilidad con PlayerView
   listPlaylists: async (skip = 0, limit = 100) => {
     const api = await ensurePlayerAPIInitialized()
-    return api.get(`/playlists/public?skip=${skip}&limit=${limit}`)
+    return api.get(`/player/playlists?skip=${skip}&limit=${limit}`)
   },
   
-  // Obtener playlist específica para reproductor (con medias y schedules)
+  // Obtener playlist específica para reproductor (con medias completas)
   getPlaylist: async (playlistId) => {
     const api = await ensurePlayerAPIInitialized()
-    return api.get(`/playlists/${playlistId}/player`)
+    return api.get(`/player/playlists/${playlistId}/complete`)
   },
   
   // Obtener información básica de una playlist
   getPlaylistInfo: async (playlistId) => {
     const api = await ensurePlayerAPIInitialized()
-    return api.get(`/playlists/${playlistId}`)
+    return api.get(`/player/playlists/${playlistId}`)
   }
 }
 
@@ -97,26 +116,57 @@ export const playerAPI = {
 export const getMediaUrl = async (media) => {
   if (!media) return ''
   
+  console.log('🐛 getMediaUrl - Entrada:', media)
+  
   try {
-    const { baseUrl } = await backendDetector.detectBackend()
+    // Verificar si estamos en modo producción primero
+    const productionConfig = createProductionBackendDetector()
+    let baseUrl
     
-    // Usar file_url si está disponible, si no construir desde filepath
+    if (productionConfig) {
+      baseUrl = productionConfig.baseUrl
+      console.log('🐛 getMediaUrl - Usando producción:', baseUrl)
+    } else {
+      const detected = await backendDetector.detectBackend()
+      baseUrl = detected.baseUrl
+      console.log('🐛 getMediaUrl - Backend detectado:', detected)
+    }
+    
+    // Usar file_url si está disponible (debería empezar con /uploads/)
     if (media.file_url) {
-      return `${baseUrl}${media.file_url}`
+      // file_url ya incluye /uploads/, así que solo agregamos el baseUrl
+      const finalUrl = `${baseUrl}${media.file_url}`
+      console.log('🐛 getMediaUrl - URL final con file_url:', finalUrl)
+      return finalUrl
     }
     
     // Fallback: construir URL desde filepath o filename
     let filepath = media.filepath || media.served_filename || media.filename
+    console.log('🐛 getMediaUrl - Filepath fallback:', filepath)
+    
+    // Asegurar que empiece con /uploads/
     if (!filepath.startsWith('/uploads/')) {
       filepath = `/uploads/${filepath}`
     }
     
-    return `${baseUrl}${filepath}`
+    const finalUrl = `${baseUrl}${filepath}`
+    console.log('🐛 getMediaUrl - URL final con fallback:', finalUrl)
+    return finalUrl
   } catch (error) {
-    console.error('Error construyendo URL de media:', error)
-    // Fallback URL
-    const filepath = media.file_url || `/uploads/${media.served_filename || media.filename}`
-    return `http://127.0.0.1:8000${filepath}`
+    console.error('🐛 getMediaUrl - Error construyendo URL de media:', error)
+    
+    // Fallback URL con mejor manejo
+    let fallbackPath
+    if (media.file_url) {
+      fallbackPath = media.file_url
+    } else {
+      const filename = media.served_filename || media.filename
+      fallbackPath = `/uploads/${filename}`
+    }
+    
+    const fallbackUrl = `http://127.0.0.1:8000${fallbackPath}`
+    console.log('🐛 getMediaUrl - URL de fallback:', fallbackUrl)
+    return fallbackUrl
   }
 }
 

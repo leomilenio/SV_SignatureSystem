@@ -59,13 +59,30 @@ import '@quasar/extras/fontawesome-v6/fontawesome-v6.css'
 // Import Quasar css
 import 'quasar/dist/quasar.css'
 
+// Import icon fixes
+import './assets/icon-fixes.css'
+
 // Toast notifications
 import Toast from 'vue-toastification'
 import 'vue-toastification/dist/index.css'
 
+// Utilidades para iconos
+import { initializeMaterialIcons } from './utils/iconUtils'
+import { applyIconSizeFixes } from './utils/iconSizeUtils'
+
 const app = createApp(App)
 
 console.log('🎬 Pochtecayotl Signance System - Frontend iniciado')
+// Verificar que el iconset se esté cargando correctamente
+console.log('🎨 Icon set cargado:', quasarIconSet)
+
+// Inicializar correcciones de iconos
+initializeMaterialIcons()
+
+// Aplicar correcciones de tamaños después de un breve delay (sin interferir)
+setTimeout(() => {
+  applyIconSizeFixes()
+}, 500)
 
 // Configure Quasar with components
 app.use(Quasar, {

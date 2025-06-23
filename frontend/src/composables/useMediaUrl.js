@@ -20,33 +20,20 @@ export function useMediaUrl() {
   const buildMediaUrl = (media) => {
     if (!media || !backendBaseUrl.value) return ''
     
-    // Obtener filepath del media
-    let filepath = media.filepath || media.file_path || ''
-    
-    // Si no hay filepath, intentar construir uno basado en el ID o filename
-    if (!filepath) {
-      if (media.id) {
-        filepath = `/uploads/${media.id}`
-      } else {
-        console.error('No se puede construir filepath sin ID')
-        return ''
-      }
+    // Priorizar file_url si está disponible (ya incluye la ruta correcta /uploads/)
+    if (media.file_url) {
+      return `${backendBaseUrl.value}${media.file_url}`
     }
     
-    // Normalizar el path
-    if (filepath && !filepath.startsWith('/')) {
-      filepath = '/' + filepath
+    // Fallback: usar served_filename o filename
+    const filename = media.served_filename || media.filename
+    if (!filename) {
+      console.error('No se puede construir URL: falta file_url, served_filename y filename')
+      return ''
     }
     
-    // Si no incluye /uploads/, agregarlo
-    if (filepath && !filepath.includes('/uploads/')) {
-      if (filepath.startsWith('/')) {
-        filepath = filepath.substring(1)
-      }
-      filepath = `/uploads/${filepath}`
-    }
-    
-    return `${backendBaseUrl.value}${filepath}`
+    // Construir URL con /uploads/
+    return `${backendBaseUrl.value}/uploads/${filename}`
   }
   
   // Inicializar detección al usar el composable

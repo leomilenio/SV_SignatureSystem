@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { useToast } from 'vue-toastification'
 import backendDetector from './backendDetector'
+import { createProductionBackendDetector, getAPIBaseURL } from './productionDetector'
 
 // Configuración inicial de Axios (se actualizará dinámicamente)
 let api = axios.create({
@@ -21,7 +22,26 @@ const initializeAPI = async () => {
 
   initializationPromise = (async () => {
     try {
-      console.log('🚀 Inicializando API con auto-detección del backend...')
+      console.log('🚀 Inicializando API con detección mejorada...')
+      
+      // NUEVO: Primero verificar si estamos en producción (servido desde backend)
+      const productionConfig = createProductionBackendDetector()
+      
+      if (productionConfig) {
+        console.log('🎯 Modo producción detectado, usando mismo origen')
+        api.defaults.baseURL = `${productionConfig.baseUrl}/api`
+        
+        // Verificar conectividad
+        console.log('🧪 Probando conectividad en modo producción...')
+        await api.get('/health', { timeout: 5000 })
+        
+        isInitialized = true
+        console.log(`✅ API inicializada en modo producción: ${productionConfig.baseUrl}`)
+        return api
+      }
+      
+      // Modo desarrollo: usar detección automática original
+      console.log('🔧 Modo desarrollo detectado, usando auto-detección...')
       
       // Intentar usar caché primero
       const cached = backendDetector.getCachedBackend()

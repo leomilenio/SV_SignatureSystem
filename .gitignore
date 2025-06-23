@@ -25,7 +25,7 @@ __pycache__/
 .Python
 build/
 develop-eggs/
-dist/
+#dist/
 downloads/
 eggs/
 .eggs/
@@ -226,7 +226,7 @@ typings/
 
 # Nuxt.js build / generate output
 .nuxt
-dist
+#dist
 
 # Gatsby files
 .cache/
@@ -409,7 +409,7 @@ htmlcov/
 # =============================================================================
 # Build directories
 build/
-dist/
+# dist/
 out/
 
 # Docker

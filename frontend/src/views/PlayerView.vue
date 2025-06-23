@@ -247,6 +247,17 @@
             </q-btn>
             
             <q-btn
+              icon="bug_report"
+              @click="debugCurrentMedia"
+              flat
+              round
+              color="orange"
+              class="debug-btn"
+            >
+              <q-tooltip>Debug URLs</q-tooltip>
+            </q-btn>
+            
+            <q-btn
               icon="stop"
               @click="stopPlayback"
               flat
@@ -489,11 +500,11 @@ export default {
           return
         }
         
-        // Los medias ya vienen con toda la información necesaria
+        // Los medios ya vienen con toda la información necesaria
         playlistMedia.value = medias.map(media => ({
           ...media,  // Datos del media (id, filename, media_type, etc.)
           effective_duration: media.duration,  // Ya incluye la duración específica de la playlist
-          url: media.file_url  // URL del archivo
+          url: media.file_url  // Usar directamente file_url del backend (ya es URL completa)
         }))
         
         console.log('Medios de playlist cargados:', {
@@ -527,31 +538,17 @@ export default {
         currentMedia.value = media
         elapsedTime.value = 0
         
-        // Limpiar URL anterior
-        currentMediaUrl.value = ''
+        // Usar la URL ya construida
+        currentMediaUrl.value = media.url || ''
         
-        // Construir URL del media usando la función importada (async en background)
-        getMediaUrl(media).then(mediaUrl => {
-          // Solo actualizar si seguimos en el mismo medio
-          if (currentMedia.value === media) {
-            currentMediaUrl.value = mediaUrl // Actualizar URL reactiva
-            
-            console.log('Medio actual cargado:', {
-              index: currentMediaIndex.value,
-              filename: media.filename,
-              media_type: media.media_type,
-              filepath: media.filepath,
-              duration: media.duration,
-              effective_duration: media.effective_duration,
-              url: mediaUrl
-            })
-          }
-        }).catch(error => {
-          console.error('Error construyendo URL del media:', error)
-          if (currentMedia.value === media) {
-            currentMediaUrl.value = '' // Limpiar URL en caso de error
-            toast.error(`Error preparando medio: ${media.filename}`)
-          }
+        console.log('Medio actual cargado:', {
+          index: currentMediaIndex.value,
+          filename: media.filename,
+          media_type: media.media_type,
+          filepath: media.filepath,
+          duration: media.duration,
+          effective_duration: media.effective_duration,
+          url: media.url
         })
       } else {
         console.warn('No hay medios disponibles para cargar')
@@ -941,12 +938,39 @@ export default {
       console.log('Medio cargado exitosamente:', currentMedia.value?.filename)
     }
     
-    const handleMediaError = (error) => {
+    const handleMediaError = async (error) => {
       console.error('Error de medio:', {
         error,
         media: currentMedia.value,
         url: currentMediaUrl.value
       })
+      
+      // Debug: Verificar detección del backend
+      try {
+        const backendDetector = (await import('../services/backendDetector')).default
+        const detected = await backendDetector.detectBackend()
+        console.log('🔍 Backend detectado:', detected)
+        
+        // Debug: Verificar qué URL está construyendo getMediaUrl
+        const { getMediaUrl } = await import('../services/playerAPI')
+        const debugUrl = await getMediaUrl(currentMedia.value)
+        console.log('🔍 URL construida por getMediaUrl:', debugUrl)
+        
+        // Debug: Verificar si el archivo existe en el servidor
+        const testUrl = `${detected.baseUrl}/uploads/${currentMedia.value?.served_filename || currentMedia.value?.filename}`
+        console.log('🔍 URL de prueba directa:', testUrl)
+        
+        // Probar acceso directo al archivo
+        try {
+          const response = await fetch(testUrl, { method: 'HEAD' })
+          console.log('🔍 Respuesta del servidor para archivo:', response.status, response.statusText)
+        } catch (fetchError) {
+          console.error('🔍 Error al acceder al archivo:', fetchError)
+        }
+        
+      } catch (debugError) {
+        console.error('🔍 Error en debug:', debugError)
+      }
       
       toast.error(`Error al cargar: ${currentMedia.value?.filename || 'medio desconocido'}`)
       
@@ -964,6 +988,58 @@ export default {
     
     const toggleInfo = () => {
       showInfo.value = !showInfo.value
+    }
+    
+    const debugCurrentMedia = async () => {
+      if (!currentMedia.value) {
+        console.warn('No hay medio actual para debuggear')
+        toast.warning('No hay medio actual para debuggear')
+        return
+      }
+      
+      console.log('🐛 === DEBUG INFORMACIÓN DEL MEDIO ===')
+      console.log('🐛 Medio actual:', currentMedia.value)
+      console.log('🐛 URL actual:', currentMediaUrl.value)
+      
+      try {
+        // Debug: Verificar detección del backend
+        const backendDetector = (await import('../services/backendDetector')).default
+        const detected = await backendDetector.detectBackend()
+        console.log('🐛 Backend detectado:', detected)
+        
+        // Debug: Verificar qué URL está construyendo getMediaUrl
+        const { getMediaUrl } = await import('../services/playerAPI')
+        const debugUrl = await getMediaUrl(currentMedia.value)
+        console.log('🐛 URL construida por getMediaUrl:', debugUrl)
+        
+        // Debug: Diferentes variaciones de URL
+        const variations = [
+          `${detected.baseUrl}/uploads/${currentMedia.value.served_filename}`,
+          `${detected.baseUrl}/uploads/${currentMedia.value.filename}`,
+          `${detected.baseUrl}${currentMedia.value.file_url}`,
+          `${detected.baseUrl}${currentMedia.value.filepath}`
+        ]
+        
+        console.log('🐛 Variaciones de URL a probar:', variations)
+        
+        for (let i = 0; i < variations.length; i++) {
+          const url = variations[i]
+          if (url && !url.includes('undefined')) {
+            try {
+              const response = await fetch(url, { method: 'HEAD' })
+              console.log(`🐛 Variación ${i + 1} (${url}):`, response.status, response.statusText)
+            } catch (fetchError) {
+              console.error(`🐛 Variación ${i + 1} falló:`, fetchError.message)
+            }
+          }
+        }
+        
+        toast.info('Información de debug en la consola')
+        
+      } catch (debugError) {
+        console.error('🐛 Error en debug:', debugError)
+        toast.error('Error en debug - ver consola')
+      }
     }
     
     const isFullscreen = ref(false)
@@ -1177,6 +1253,7 @@ export default {
       skipToPrevious,
       stopPlayback,
       toggleInfo,
+      debugCurrentMedia,
       toggleFullscreen,
       dismissScheduleNotification,
       goToAdmin,
