@@ -1137,17 +1137,19 @@ export default {
       try {
         console.log('🔍 Intentando cargar logo del negocio...')
         
-        // Obtener la URL base del backend
-        const cached = backendDetector.getCachedBackend()
-        if (!cached) {
-          console.log('❌ No hay backend detectado')
+        // Obtener la URL base del backend usando la misma lógica que los medios
+        let baseUrl
+        try {
+          const detected = await backendDetector.detectBackend()
+          baseUrl = detected.baseUrl
+          console.log('📡 Backend detectado para logo:', baseUrl)
+        } catch (detectionError) {
+          console.log('❌ Error detectando backend para logo:', detectionError)
           return
         }
         
-        console.log('📡 Backend detectado:', cached.baseUrl)
-        
         // Intentar cargar el logo directamente
-        const logoUrl = `${cached.baseUrl}/api/business/logo`
+        const logoUrl = `${baseUrl}/api/business/logo`
         console.log('🖼️ Intentando cargar logo desde:', logoUrl)
         
         try {
@@ -1203,7 +1205,12 @@ export default {
       console.log('PlayerView mounted, initial fullscreen state:', isFullscreen.value)
       initializeFullscreenState()
       fetchPlaylists()
-      loadBusinessLogo()
+      
+      // Cargar logo después de un breve delay para asegurar que el backend esté detectado
+      setTimeout(() => {
+        loadBusinessLogo()
+      }, 1000)
+      
       // Agregar listener para cambios de pantalla completa
       document.addEventListener('fullscreenchange', handleFullscreenChange)
       

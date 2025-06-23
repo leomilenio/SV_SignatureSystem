@@ -69,12 +69,19 @@ app.add_middleware(
 # Static files
 app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
 
-# Serve frontend from static directory - SOLUCIÓN SIMPLIFICADA
+# Serve frontend from static directory
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
 if os.path.exists(os.path.join(STATIC_DIR, "index.html")):
+    # Montar archivos estáticos del frontend (CSS, JS, imágenes, etc.)
+    app.mount("/css", StaticFiles(directory=os.path.join(STATIC_DIR, "css")), name="css")
+    app.mount("/js", StaticFiles(directory=os.path.join(STATIC_DIR, "js")), name="js")
+    app.mount("/fonts", StaticFiles(directory=os.path.join(STATIC_DIR, "fonts")), name="fonts")
+    
+    # También montar toda la carpeta static para archivos no específicos
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+    
     print(f"✅ Frontend servido desde: {STATIC_DIR}")
-    print(f"   📁 Disponible en: /static/")
+    print(f"   📁 Archivos estáticos disponibles desde raíz")
 else:
     print(f"⚠️  Frontend no encontrado en: {STATIC_DIR}")
 
