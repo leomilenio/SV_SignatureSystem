@@ -1492,7 +1492,7 @@ export default {
   gap: 16px;
 }
 
-/* Player State Styles */
+/* Player State */
 .player-state {
   height: 100vh;
   display: flex;
@@ -1793,9 +1793,9 @@ export default {
   bottom: 0 !important;
   left: 0 !important;
   right: 0 !important;
-  background: rgba(0, 0, 0, 0.9) !important;
+  background: var(--surface) !important;
   backdrop-filter: blur(10px) !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-top: 1px solid var(--border) !important;
   padding: 15px 20px !important;
   z-index: 1000 !important;
 }
@@ -1813,20 +1813,20 @@ export default {
 
 .normal-controls .playlist-info-controls {
   grid-area: info;
-  color: white;
+  color: var(--text-primary);
 }
 
 .normal-controls .playlist-info-controls h4 {
   margin: 0 0 4px 0;
   font-size: 1.1rem;
-  color: white;
+  color: var(--text-primary);
   font-weight: 600;
 }
 
 .normal-controls .playlist-info-controls p {
   margin: 0;
   font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-secondary);
 }
 
 .normal-controls .media-controls {
@@ -1973,8 +1973,20 @@ export default {
 }
 
 .dark-mode .player-controls {
-  background: var(--surface);
-  border-color: var(--border);
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+}
+
+/* Asegurar que todos los elementos internos de controles también cambien */
+.dark-mode .control-panel,
+.dark-mode .normal-controls .control-panel {
+  background: transparent !important;
+}
+
+.dark-mode .playlist-info-controls,
+.dark-mode .media-controls,
+.dark-mode .additional-controls {
+  background: transparent !important;
 }
 
 .player-header::before {
@@ -2135,6 +2147,20 @@ export default {
 .playlist-action {
   color: var(--secondary);
   transition: all 0.3s ease;
+}
+
+/* Estilos específicos para modo claro en controles */
+.light-mode .player-controls,
+body:not(.dark-mode) .player-controls {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+}
+
+.light-mode .control-panel,
+.light-mode .normal-controls .control-panel,
+body:not(.dark-mode) .control-panel,
+body:not(.dark-mode) .normal-controls .control-panel {
+  background: transparent !important;
 }
 </style>
 
