@@ -1097,6 +1097,11 @@ export default {
           clearTimeout(fullscreenControlsTimer)
           fullscreenControlsTimer = null
         }
+        // Restaurar cursor normal al salir de pantalla completa
+        setCursorVisibility(true)
+      } else {
+        // Al entrar en pantalla completa, mostrar cursor inicialmente
+        setCursorVisibility(true)
       }
     }
 
@@ -1107,7 +1112,7 @@ export default {
       showFullscreenControls.value = true
       
       // Mostrar cursor
-      document.body.style.cursor = 'default'
+      setCursorVisibility(true)
       
       // Limpiar timer anterior
       if (fullscreenControlsTimer) {
@@ -1117,11 +1122,29 @@ export default {
       // Ocultar controles después de 3 segundos de inactividad
       fullscreenControlsTimer = setTimeout(() => {
         showFullscreenControls.value = false
-        // Ocultar cursor en pantalla completa
-        if (isFullscreen.value) {
+        // Ocultar cursor solo si seguimos en pantalla completa
+        setCursorVisibility(false)
+      }, 3000)
+    }
+    
+    // Función para manejar el estado del cursor
+    const setCursorVisibility = (show) => {
+      const playerContainer = document.querySelector('.player-container')
+      if (!playerContainer) return
+      
+      if (isFullscreen.value) {
+        if (show) {
+          playerContainer.classList.remove('hide-cursor')
+          document.body.style.cursor = 'default'
+        } else {
+          playerContainer.classList.add('hide-cursor')
           document.body.style.cursor = 'none'
         }
-      }, 3000)
+      } else {
+        // En modo ventana, siempre mostrar cursor
+        playerContainer.classList.remove('hide-cursor')
+        document.body.style.cursor = 'default'
+      }
     }
     
     const dismissScheduleNotification = () => {
@@ -1277,6 +1300,7 @@ export default {
       getCurrentDuration,
       initializeFullscreenState,
       onMouseMoveFullscreen,
+      setCursorVisibility,
       
       // Theme
       isDarkMode
@@ -1293,6 +1317,8 @@ export default {
   color: var(--text-primary);
   position: relative;
   overflow: hidden;
+  /* Cursor normal en modo ventana */
+  cursor: default;
 }
 
 .theme-toggle {
@@ -2149,18 +2175,40 @@ export default {
   transition: all 0.3s ease;
 }
 
-/* Estilos específicos para modo claro en controles */
-.light-mode .player-controls,
-body:not(.dark-mode) .player-controls {
-  background: var(--surface) !important;
-  border-color: var(--border) !important;
+/* Manejo correcto del cursor */
+.player-container {
+  /* Cursor normal en modo ventana */
+  cursor: default;
 }
 
-.light-mode .control-panel,
-.light-mode .normal-controls .control-panel,
-body:not(.dark-mode) .control-panel,
-body:not(.dark-mode) .normal-controls .control-panel {
-  background: transparent !important;
+/* En pantalla completa, usar cursor normal por defecto */
+.fullscreen-mode {
+  cursor: default !important;
+}
+
+/* Cuando los controles están ocultos en pantalla completa */
+.fullscreen-mode.hide-cursor {
+  cursor: none !important;
+}
+
+.fullscreen-mode.hide-cursor * {
+  cursor: none !important;
+}
+
+/* Siempre mostrar cursor en controles y botones */
+.player-controls,
+.player-controls *,
+.fullscreen-controls,
+.fullscreen-controls *,
+.theme-toggle,
+.q-btn,
+button {
+  cursor: pointer !important;
+}
+
+.fullscreen-exit-overlay,
+.fullscreen-exit-overlay * {
+  cursor: pointer !important;
 }
 </style>
 
