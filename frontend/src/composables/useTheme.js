@@ -34,6 +34,11 @@ const setCSSVariables = (dark) => {
     root.style.setProperty('--success', '#66BB6A')
     root.style.setProperty('--warning', '#FFA726')
     root.style.setProperty('--info', '#42A5F5')
+    // Sombras adaptativas para modo oscuro
+    root.style.setProperty('--shadow-sm', '0 1px 3px 0 rgba(0, 0, 0, 0.5)')
+    root.style.setProperty('--shadow-md', '0 4px 6px -1px rgba(0, 0, 0, 0.4)')
+    root.style.setProperty('--shadow-lg', '0 10px 15px -3px rgba(0, 0, 0, 0.4)')
+    root.style.setProperty('--shadow-xl', '0 20px 25px -5px rgba(0, 0, 0, 0.5)')
   } else {
     // Modo Claro
     root.style.setProperty('--primary', '#F0907B')
@@ -52,6 +57,11 @@ const setCSSVariables = (dark) => {
     root.style.setProperty('--success', '#43A047')
     root.style.setProperty('--warning', '#FB8C00')
     root.style.setProperty('--info', '#1E88E5')
+    // Sombras adaptativas para modo claro
+    root.style.setProperty('--shadow-sm', '0 1px 3px 0 rgba(0, 0, 0, 0.1)')
+    root.style.setProperty('--shadow-md', '0 4px 6px -1px rgba(0, 0, 0, 0.1)')
+    root.style.setProperty('--shadow-lg', '0 10px 15px -3px rgba(0, 0, 0, 0.1)')
+    root.style.setProperty('--shadow-xl', '0 20px 25px -5px rgba(0, 0, 0, 0.1)')
   }
 }
 

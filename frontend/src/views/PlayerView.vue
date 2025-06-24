@@ -331,7 +331,7 @@ export default {
   setup() {
     const router = useRouter()
     const toast = useToast()
-    const { isDarkMode } = useTheme()
+    const { isDarkMode, loadTheme } = useTheme()
     const { backendBaseUrl, buildMediaUrl } = useMediaUrl()
     
     // Referencias a elementos del DOM
@@ -1203,6 +1203,10 @@ export default {
     // Lifecycle hooks
     onMounted(() => {
       console.log('PlayerView mounted, initial fullscreen state:', isFullscreen.value)
+      
+      // Asegurar que el tema esté aplicado correctamente
+      loadTheme()
+      
       initializeFullscreenState()
       fetchPlaylists()
       
@@ -1351,11 +1355,11 @@ export default {
 .content-card {
   max-width: 1200px;
   width: 100%;
-  background: var(--bg-primary);
+  background: var(--surface);
   border-radius: 20px;
   padding: 40px;
-  box-shadow: var(--shadow-xl);
-  border: 1px solid rgba(var(--primary-rgb), 0.1);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border);
 }
 
 .loading-section {
@@ -1394,12 +1398,12 @@ export default {
 }
 
 .playlist-card {
-  background: var(--bg-secondary);
+  background: var(--background);
   border-radius: 16px;
   padding: 24px;
   cursor: pointer;
   transition: all 0.3s ease;
-  border: 2px solid transparent;
+  border: 2px solid var(--border);
   display: flex;
   align-items: center;
   gap: 20px;
@@ -1576,8 +1580,8 @@ export default {
 }
 
 .player-controls {
-  background: var(--bg-primary);
-  border-top: 1px solid rgba(var(--primary-rgb), 0.1);
+  background: var(--surface);
+  border-top: 1px solid var(--border);
   padding: 20px;
 }
 
@@ -1955,22 +1959,22 @@ export default {
 }
 
 /* Dark Mode Specific Adjustments */
-.body--dark .content-card {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.1);
+.dark-mode .content-card {
+  background: var(--surface);
+  border-color: var(--border);
 }
 
-.body--dark .playlist-card {
-  background: rgba(255, 255, 255, 0.03);
+.dark-mode .playlist-card {
+  background: var(--background);
 }
 
-.body--dark .playlist-card:hover {
-  background: rgba(255, 255, 255, 0.08);
+.dark-mode .playlist-card:hover {
+  background: var(--surface);
 }
 
-.body--dark .player-controls {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.1);
+.dark-mode .player-controls {
+  background: var(--surface);
+  border-color: var(--border);
 }
 
 .player-header::before {
