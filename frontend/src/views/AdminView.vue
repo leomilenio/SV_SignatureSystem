@@ -141,7 +141,42 @@
                       </q-item-section>
                       <q-item-section>
                         <q-item-label>{{ media.filename }}</q-item-label>
-                        <q-item-label caption>{{ media.media_type || media.file_type }} - Orden: {{ index + 1 }}</q-item-label>
+                        <q-item-label caption>
+                          {{ media.media_type || media.file_type }} - Orden: {{ index + 1 }}
+                          <span class="duration-display">
+                            - Duración: 
+                            <span 
+                              v-if="!media.editingDuration && (media.media_type || media.file_type) !== 'video'"
+                              @dblclick="startEditDuration(media)"
+                              class="duration-value cursor-pointer text-primary"
+                              :title="'Doble clic para editar duración'"
+                            >
+                              {{ media.duration || 0 }}s
+                            </span>
+                            <span 
+                              v-else-if="(media.media_type || media.file_type) === 'video'"
+                              class="duration-readonly"
+                            >
+                              {{ media.duration || 0 }}s
+                            </span>
+                            <q-input
+                              v-else
+                              v-model.number="media.tempDuration"
+                              type="number"
+                              min="1"
+                              max="3600"
+                              dense
+                              outlined
+                              suffix="s"
+                              class="duration-input"
+                              style="width: 80px; display: inline-block;"
+                              @blur="saveDuration(media)"
+                              @keyup.enter="saveDuration(media)"
+                              @keyup.escape="cancelEditDuration(media)"
+                              autofocus
+                            />
+                          </span>
+                        </q-item-label>
                       </q-item-section>
                       <q-item-section side>
                         <q-btn 
@@ -476,6 +511,48 @@ export default {
       router.push('/media')
     }
 
+    // Funciones para edición inline de duración
+    const startEditDuration = (media) => {
+      if ((media.media_type || media.file_type) === 'video') return
+      media.editingDuration = true
+      media.tempDuration = media.duration || 5
+    }
+
+    const saveDuration = async (media) => {
+      if (media.tempDuration && media.tempDuration > 0) {
+        try {
+          const response = await fetch(`${backendBaseUrl.value}/api/media/${media.id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('signance_token')}`
+            },
+            body: JSON.stringify({ 
+              filename: media.filename,
+              media_type: media.media_type || media.file_type,
+              duration: media.tempDuration 
+            })
+          })
+
+          if (response.ok) {
+            media.duration = media.tempDuration
+            toast.success('Duración actualizada correctamente')
+          } else {
+            throw new Error('Error en la respuesta del servidor')
+          }
+        } catch (error) {
+          toast.error('Error al actualizar la duración')
+          console.error('Error updating media duration:', error)
+        }
+      }
+      cancelEditDuration(media)
+    }
+
+    const cancelEditDuration = (media) => {
+      media.editingDuration = false
+      delete media.tempDuration
+    }
+
     onMounted(async () => {
       refreshData()
       $q.dark.set(isDarkMode.value)
@@ -530,7 +607,10 @@ export default {
       addMediaToPlaylist,
       removeMediaFromPlaylist,
       reorderPlaylistMedia,
-      getMediaIcon
+      getMediaIcon,
+      startEditDuration,
+      saveDuration,
+      cancelEditDuration
     }
   }
 }
@@ -856,6 +936,31 @@ export default {
   .section-spacing + .section-spacing {
     margin-top: 16px;
   }
+}
+
+/* Estilos para edición de duración */
+.duration-display {
+  font-size: 0.85em;
+}
+
+.duration-value {
+  border-bottom: 1px dashed var(--primary);
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+.duration-value:hover {
+  background-color: var(--primary);
+  color: white;
+}
+
+.duration-readonly {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.duration-input {
+  margin: 0 4px;
 }
 </style>
 
